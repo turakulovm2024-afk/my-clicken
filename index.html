@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Мировой Кликер 📱 (Anti-Autoclicker)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 20% 30%, #34495e, #1a252f);
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            overflow-x: hidden;
+            position: relative;
+            padding: 12px;
+        }
+        #score-board {
+            position: fixed;
+            top: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
+            font-size: clamp(40px, 15vw, 80px);
+            font-weight: bold;
+            text-shadow: 0 6px 12px rgba(0,0,0,0.4);
+            z-index: 5;
+            pointer-events: none;
+        }
+        #click-button {
+            width: min(75vw, 75vh, 300px);
+            height: min(75vw, 75vh, 300px);
+            border-radius: 50%;
+            border: none;
+            background: radial-gradient(circle at 30% 30%, #ffe066, #f39c12);
+            box-shadow: 0 12px 0 #b85e00, 0 20px 30px rgba(0,0,0,0.3);
+            cursor: pointer;
+            font-weight: bold;
+            font-size: min(10vw, 48px);
+            color: white;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: all 0.05s ease;
+            position: relative;
+            z-index: 5;
+            outline: none;
+            user-select: none;
+            touch-action: manipulation;
+            margin-top: 10vh;
+        }
+        #click-button:active {
+            transform: scale(0.94);
+            box-shadow: 0 6px 0 #b85e00, 0 12px 20px rgba(0,0,0,0.3);
+        }
+        /* Лидерборд */
+        #leaderboard {
+            position: fixed;
+            right: 12px;
+            top: 80px;
+            width: calc(100% - 24px);
+            max-width: 300px;
+            background: rgba(10, 15, 25, 0.85);
+            backdrop-filter: blur(8px);
+            color: white;
+            border-radius: 24px;
+            z-index: 20;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,215,0,0.3);
+            overflow: hidden;
+            transition: max-height 0.3s;
+        }
+        #leaderboard.collapsed {
+            max-height: 60px;
+        }
+        #leaderboard:not(.collapsed) {
+            max-height: 500px;
+        }
+        #leader-header {
+            padding: 16px 18px;
+            font-size: 22px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.3);
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        #leader-header span {
+            font-size: 28px;
+            transition: transform 0.3s;
+        }
+        #leaderboard.collapsed #leader-header span {
+            transform: rotate(-90deg);
+        }
+        #leader-list {
+            padding: 12px 18px 18px;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+        .entry {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 18px;
+            padding: 4px 0;
+        }
+        .entry span {
+            max-width: 170px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .entry b {
+            color: #ffd966;
+            font-size: 20px;
+        }
+        #change-player {
+            position: fixed;
+            left: 12px;
+            top: 20px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 18px;
+            border-radius: 40px;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 15;
+            backdrop-filter: blur(4px);
+            touch-action: manipulation;
+            border: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        /* Предупреждение об автокликере */
+        #anti-autoclicker-warning {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(220, 20, 60, 0.9);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: bold;
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: opacity 0.3s;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .particle {
+            position: fixed;
+            pointer-events: none;
+            width: 50px;
+            height: 50px;
+            z-index: 100;
+            animation: fly 0.6s ease-out forwards;
+            filter: drop-shadow(0 6px 8px rgba(0,0,0,0.3));
+            will-change: transform, opacity;
+        }
+        @keyframes fly {
+            0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(var(--x), var(--y)) rotate(360deg); opacity: 0; }
+        }
+        @media (max-width: 480px) {
+            #leaderboard {
+                right: 8px;
+                top: 80px;
+                width: calc(100% - 16px);
+            }
+            #change-player {
+                padding: 8px 14px;
+                font-size: 14px;
+            }
+            .entry {
+                font-size: 16px;
+            }
+            #anti-autoclicker-warning {
+                font-size: 14px;
+                padding: 8px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="score-board">
+        <span id="count">0</span>
+    </div>
+
+    <div id="leaderboard" class="">
+        <div id="leader-header">
+            🏆 top players
+            <span>▼</span>
+        </div>
+        <div id="leader-list">loading...</div>
+    </div>
+
+    <button id="change-player">🔄 player</button>
+
+    <button id="click-button">click!</button>
+
+    <!-- Элемент для предупреждения (изначально скрыт) -->
+    <div id="anti-autoclicker-warning" style="opacity: 0;">⛔ Автокликер запрещён! Клик не засчитан</div>
+
+    <!-- Import Map -->
+    <script type="importmap">
+        {
+            "imports": {
+                "firebase/app": "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js",
+                "firebase/database": "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "firebase/app";
+        import { getDatabase, ref, onValue, update, increment, set } from "firebase/database";
+
+        // --- КОНФИГУРАЦИЯ ---
+        const firebaseConfig = {
+            databaseURL: "https://mygame-b11bf-default-rtdb.firebaseio.com/"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ---
+        let playerName = localStorage.getItem('clickerName');
+        let score = 0;
+        const countDisplay = document.getElementById('count');
+        const leaderList = document.getElementById('leader-list');
+        const clickBtn = document.getElementById('click-button');
+
+        // --- ЗАЩИТА ОТ АВТОКЛИКЕРОВ ---
+        const AUTOCLICKER_CONFIG = {
+            MIN_INTERVAL_MS: 65,        // Минимальный интервал между кликами (~15 кликов/сек)
+            MAX_UNIFORM_CLICKS: 5,       // Сколько кликов подряд могут иметь почти одинаковый интервал
+            UNIFORM_TOLERANCE_MS: 8,     // Допустимое отклонение для определения равномерности (мс)
+            WARNING_DURATION: 1500       // Сколько показывать предупреждение (мс)
+        };
+
+        let lastClickTime = 0;
+        let suspiciousClicks = 0;
+        let lastIntervals = [];           // Храним последние 5 интервалов
+        let warningTimeout = null;
+        const warningEl = document.getElementById('anti-autoclicker-warning');
+
+        // Функция показа предупреждения
+        function showAutoclickerWarning() {
+            if (warningTimeout) clearTimeout(warningTimeout);
+            warningEl.style.opacity = '1';
+            warningTimeout = setTimeout(() => {
+                warningEl.style.opacity = '0';
+            }, AUTOCLICKER_CONFIG.WARNING_DURATION);
+        }
+
+        // Проверка на автокликер: возвращает true, если клик нужно заблокировать
+        function isAutoclickerDetected(now) {
+            // Если первый клик - пропускаем
+            if (lastClickTime === 0) {
+                lastClickTime = now;
+                return false;
+            }
+
+            const interval = now - lastClickTime;
+            let blocked = false;
+
+            // 1. Слишком быстрый клик
+            if (interval < AUTOCLICKER_CONFIG.MIN_INTERVAL_MS) {
+                suspiciousClicks++;
+                blocked = true;
+            } else {
+                // 2. Анализ равномерности интервалов
+                lastIntervals.push(interval);
+                if (lastIntervals.length > AUTOCLICKER_CONFIG.MAX_UNIFORM_CLICKS) {
+                    lastIntervals.shift();
+                }
+
+                // Проверяем, если набралось достаточно интервалов
+                if (lastIntervals.length >= AUTOCLICKER_CONFIG.MAX_UNIFORM_CLICKS) {
+                    const avg = lastIntervals.reduce((a, b) => a + b, 0) / lastIntervals.length;
+                    const allClose = lastIntervals.every(int => 
+                        Math.abs(int - avg) <= AUTOCLICKER_CONFIG.UNIFORM_TOLERANCE_MS
+                    );
+                    if (allClose) {
+                        suspiciousClicks++;
+                        blocked = true;
+                    } else {
+                        // Постепенно сбрасываем подозрения при нормальной активности
+                        suspiciousClicks = Math.max(0, suspiciousClicks - 1);
+                    }
+                }
+            }
+
+            // Если не заблокирован, обновляем время последнего клика
+            if (!blocked) {
+                lastClickTime = now;
+            } else {
+                // При блокировке показываем предупреждение
+                showAutoclickerWarning();
+                // Если слишком много подозрительных кликов подряд, можно временно заблокировать кнопку (не делаем, но счётчик растёт)
+                if (suspiciousClicks > 10) {
+                    // Дополнительная мера: игнорируем клики на пару секунд
+                    // Но в нашей реализации просто не засчитываем, предупреждение уже есть
+                }
+            }
+
+            return blocked;
+        }
+
+        // --- СВОРАЧИВАНИЕ ЛИДЕРБОРДА ---
+        const leaderboardDiv = document.getElementById('leaderboard');
+        const leaderHeader = document.getElementById('leader-header');
+        leaderHeader.addEventListener('click', (e) => {
+            e.stopPropagation();
+            leaderboardDiv.classList.toggle('collapsed');
+        });
+        if (window.innerWidth <= 600) {
+            leaderboardDiv.classList.add('collapsed');
+        }
+
+        // --- УПРАВЛЕНИЕ ИГРОКОМ ---
+        function askNewName() {
+            const newName = prompt("Введите ваш ник:", "Игрок_" + Math.floor(Math.random() * 1000));
+            if (newName) {
+                playerName = newName;
+                localStorage.setItem('clickerName', playerName);
+            } else {
+                playerName = "Гость_" + Math.floor(Math.random() * 1000);
+                localStorage.setItem('clickerName', playerName);
+            }
+            setupPlayerSync();
+        }
+
+        function setupPlayerSync() {
+            const myRef = ref(db, 'users/' + playerName);
+            onValue(myRef, (snap) => {
+                const val = snap.val();
+                if (val && typeof val.score === 'number') {
+                    score = val.score;
+                    countDisplay.innerText = score;
+                } else {
+                    score = 0;
+                    countDisplay.innerText = '0';
+                    set(myRef, { score: 0 });
+                }
+            });
+        }
+
+        if (!playerName) {
+            askNewName();
+        } else {
+            setupPlayerSync();
+        }
+
+        document.getElementById('change-player').addEventListener('click', () => {
+            if (confirm('Сменить игрока? Прогресс сохранится.     Change player? Progress will be saved.')) {
+                askNewName();
+            }
+        });
+
+        // --- ОБРАБОТКА КЛИКОВ С ЗАЩИТОЙ ---
+        function handleClick(x, y) {
+            const now = performance.now();
+            
+            // Проверка на автокликер
+            if (isAutoclickerDetected(now)) {
+                return; // Блокируем клик
+            }
+
+            // Увеличиваем счёт
+            score++;
+            countDisplay.innerText = score;
+
+            // Отправляем в Firebase
+            const userRef = ref(db, 'users/' + playerName);
+            update(userRef, {
+                score: increment(1)
+            }).catch(err => console.warn("Ошибка обновления:", err));
+
+            // Частица
+            createParticle(x, y);
+        }
+
+        // Обработчик для мыши
+        clickBtn.addEventListener('click', (e) => {
+            if (e.pointerType === 'touch') return;
+            handleClick(e.clientX, e.clientY);
+        });
+
+        // Обработчик для касаний (мобильные)
+        clickBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            if (touch) {
+                handleClick(touch.clientX, touch.clientY);
+            }
+        }, { passive: false });
+
+        clickBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // --- ЛИДЕРБОРД ---
+        const usersRef = ref(db, 'users');
+        onValue(usersRef, (snapshot) => {
+            const data = snapshot.val();
+            if (!data) {
+                leaderList.innerHTML = '<div class="entry">Нет данных</div>';
+                return;
+            }
+            const sorted = Object.entries(data)
+                .map(([name, val]) => ({ name, score: val.score || 0 }))
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 10);
+            leaderList.innerHTML = sorted.map(user => 
+                `<div class="entry"><span>${escapeHTML(user.name)}</span><b>${user.score}</b></div>`
+            ).join('');
+        });
+
+        function escapeHTML(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // --- ЧАСТИЦЫ ---
+        function createParticle(x, y) {
+            const p = document.createElement('img');
+            p.src = 'https://abrakadabra.fun/uploads/posts/2021-12/1640762606_1-abrakadabra-fun-p-monetka-na-prozrachnom-fone-1.png';
+            p.className = 'particle';
+            
+            const dx = (Math.random() - 0.5) * 250;
+            const dy = (Math.random() - 0.5) * 250 - 50;
+            
+            p.style.left = (x - 25) + 'px';
+            p.style.top  = (y - 25) + 'px';
+            p.style.setProperty('--x', dx + 'px');
+            p.style.setProperty('--y', dy + 'px');
+            
+            document.body.appendChild(p);
+            setTimeout(() => { if (p.parentNode) p.remove(); }, 600);
+        }
+
+        // Глобальная функция (если вызывается из HTML)
+        window.makeClick = function(event) {
+            if (event) handleClick(event.clientX, event.clientY);
+        };
+    </script>
+</body>
+</html>
+
