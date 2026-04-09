@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Мировой Кликер 📱 (Anti-Autoclicker)</title>
+    <title>Мировой Кликер 🛡️ (мягкая защита)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -59,7 +59,6 @@
             transform: scale(0.94);
             box-shadow: 0 6px 0 #b85e00, 0 12px 20px rgba(0,0,0,0.3);
         }
-        /* Лидерборд */
         #leaderboard {
             position: fixed;
             right: 12px;
@@ -140,24 +139,6 @@
             border: none;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
-        /* Предупреждение об автокликере */
-        #anti-autoclicker-warning {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(220, 20, 60, 0.9);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 40px;
-            font-weight: bold;
-            backdrop-filter: blur(4px);
-            z-index: 200;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            transition: opacity 0.3s;
-            pointer-events: none;
-            white-space: nowrap;
-        }
         .particle {
             position: fixed;
             pointer-events: none;
@@ -185,10 +166,23 @@
             .entry {
                 font-size: 16px;
             }
-            #anti-autoclicker-warning {
-                font-size: 14px;
-                padding: 8px 16px;
-            }
+        }
+        #warning-msg {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            white-space: nowrap;
         }
     </style>
 </head>
@@ -210,8 +204,7 @@
 
     <button id="click-button">click!</button>
 
-    <!-- Элемент для предупреждения (изначально скрыт) -->
-    <div id="anti-autoclicker-warning" style="opacity: 0;">⛔ Автокликер запрещён! Клик не засчитан</div>
+    <div id="warning-msg">⚠️ Слишком быстро! Клик не засчитан</div>
 
     <!-- Import Map -->
     <script type="importmap">
@@ -227,46 +220,44 @@
         import { initializeApp } from "firebase/app";
         import { getDatabase, ref, onValue, update, increment, set } from "firebase/database";
 
-        // --- КОНФИГУРАЦИЯ ---
+        // Конфигурация
         const firebaseConfig = {
             databaseURL: "https://mygame-b11bf-default-rtdb.firebaseio.com/"
         };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ---
+        // Переменные
         let playerName = localStorage.getItem('clickerName');
         let score = 0;
         const countDisplay = document.getElementById('count');
         const leaderList = document.getElementById('leader-list');
         const clickBtn = document.getElementById('click-button');
+        const warningMsg = document.getElementById('warning-msg');
 
-        // --- ЗАЩИТА ОТ АВТОКЛИКЕРОВ ---
-        const AUTOCLICKER_CONFIG = {
-            MIN_INTERVAL_MS: 65,        // Минимальный интервал между кликами (~15 кликов/сек)
-            MAX_UNIFORM_CLICKS: 5,       // Сколько кликов подряд могут иметь почти одинаковый интервал
-            UNIFORM_TOLERANCE_MS: 8,     // Допустимое отклонение для определения равномерности (мс)
-            WARNING_DURATION: 1500       // Сколько показывать предупреждение (мс)
+        // ========== МЯГКАЯ ЗАЩИТА ОТ АВТОКЛИКЕРОВ ==========
+        // Настройки (можно менять под себя)
+        const ANTI_AUTOCLICKER = {
+            MIN_INTERVAL_MS: 80,        // Минимальный интервал 80 мс (~12 кликов/сек) — мягко
+            MAX_UNIFORM_CLICKS: 7,       // Проверяем равномерность только после 7 кликов подряд
+            UNIFORM_TOLERANCE_MS: 12,    // Допустимое отклонение 12 мс
+            WARNING_DURATION: 800        // Показывать предупреждение 0.8 сек
         };
 
         let lastClickTime = 0;
-        let suspiciousClicks = 0;
-        let lastIntervals = [];           // Храним последние 5 интервалов
-        let warningTimeout = null;
-        const warningEl = document.getElementById('anti-autoclicker-warning');
+        let suspiciousCount = 0;
+        let recentIntervals = [];
+        let warningTimer = null;
 
-        // Функция показа предупреждения
-        function showAutoclickerWarning() {
-            if (warningTimeout) clearTimeout(warningTimeout);
-            warningEl.style.opacity = '1';
-            warningTimeout = setTimeout(() => {
-                warningEl.style.opacity = '0';
-            }, AUTOCLICKER_CONFIG.WARNING_DURATION);
+        function showWarning() {
+            if (warningTimer) clearTimeout(warningTimer);
+            warningMsg.style.opacity = '1';
+            warningTimer = setTimeout(() => {
+                warningMsg.style.opacity = '0';
+            }, ANTI_AUTOCLICKER.WARNING_DURATION);
         }
 
-        // Проверка на автокликер: возвращает true, если клик нужно заблокировать
-        function isAutoclickerDetected(now) {
-            // Если первый клик - пропускаем
+        function isAutoclicker(now) {
             if (lastClickTime === 0) {
                 lastClickTime = now;
                 return false;
@@ -275,50 +266,46 @@
             const interval = now - lastClickTime;
             let blocked = false;
 
-            // 1. Слишком быстрый клик
-            if (interval < AUTOCLICKER_CONFIG.MIN_INTERVAL_MS) {
-                suspiciousClicks++;
+            // 1. Слишком частые клики
+            if (interval < ANTI_AUTOCLICKER.MIN_INTERVAL_MS) {
+                suspiciousCount++;
                 blocked = true;
             } else {
-                // 2. Анализ равномерности интервалов
-                lastIntervals.push(interval);
-                if (lastIntervals.length > AUTOCLICKER_CONFIG.MAX_UNIFORM_CLICKS) {
-                    lastIntervals.shift();
+                // 2. Проверка на роботизированную равномерность
+                recentIntervals.push(interval);
+                if (recentIntervals.length > ANTI_AUTOCLICKER.MAX_UNIFORM_CLICKS) {
+                    recentIntervals.shift();
                 }
 
-                // Проверяем, если набралось достаточно интервалов
-                if (lastIntervals.length >= AUTOCLICKER_CONFIG.MAX_UNIFORM_CLICKS) {
-                    const avg = lastIntervals.reduce((a, b) => a + b, 0) / lastIntervals.length;
-                    const allClose = lastIntervals.every(int => 
-                        Math.abs(int - avg) <= AUTOCLICKER_CONFIG.UNIFORM_TOLERANCE_MS
+                if (recentIntervals.length >= ANTI_AUTOCLICKER.MAX_UNIFORM_CLICKS) {
+                    const avg = recentIntervals.reduce((a, b) => a + b, 0) / recentIntervals.length;
+                    const allSimilar = recentIntervals.every(int => 
+                        Math.abs(int - avg) <= ANTI_AUTOCLICKER.UNIFORM_TOLERANCE_MS
                     );
-                    if (allClose) {
-                        suspiciousClicks++;
+                    if (allSimilar) {
+                        suspiciousCount += 2; // Сильнее повышаем подозрения
                         blocked = true;
                     } else {
-                        // Постепенно сбрасываем подозрения при нормальной активности
-                        suspiciousClicks = Math.max(0, suspiciousClicks - 1);
+                        // Постепенно снижаем подозрения при нормальной игре
+                        suspiciousCount = Math.max(0, suspiciousCount - 1);
                     }
                 }
             }
 
-            // Если не заблокирован, обновляем время последнего клика
-            if (!blocked) {
-                lastClickTime = now;
-            } else {
-                // При блокировке показываем предупреждение
-                showAutoclickerWarning();
-                // Если слишком много подозрительных кликов подряд, можно временно заблокировать кнопку (не делаем, но счётчик растёт)
-                if (suspiciousClicks > 10) {
-                    // Дополнительная мера: игнорируем клики на пару секунд
-                    // Но в нашей реализации просто не засчитываем, предупреждение уже есть
+            if (blocked) {
+                showWarning();
+                // Если подозрений накопилось много, временно блокируем кнопку (визуально не меняем, просто игнорим клики)
+                if (suspiciousCount > 15) {
+                    // Можно добавить дополнительную задержку, но оставим просто игнор
                 }
+                return true;
+            } else {
+                lastClickTime = now;
+                return false;
             }
-
-            return blocked;
         }
 
-        // --- СВОРАЧИВАНИЕ ЛИДЕРБОРДА ---
+        // ----- Сворачивание лидерборда -----
         const leaderboardDiv = document.getElementById('leaderboard');
         const leaderHeader = document.getElementById('leader-header');
         leaderHeader.addEventListener('click', (e) => {
@@ -329,7 +316,7 @@
             leaderboardDiv.classList.add('collapsed');
         }
 
-        // --- УПРАВЛЕНИЕ ИГРОКОМ ---
+        // ----- Управление игроком -----
         function askNewName() {
             const newName = prompt("Введите ваш ник:", "Игрок_" + Math.floor(Math.random() * 1000));
             if (newName) {
@@ -364,17 +351,17 @@
         }
 
         document.getElementById('change-player').addEventListener('click', () => {
-            if (confirm('Сменить игрока? Прогресс сохранится.     Change player? Progress will be saved.')) {
+            if (confirm('Сменить игрока? Прогресс сохранится. Change player? Progress will be saved.')) {
                 askNewName();
             }
         });
 
-        // --- ОБРАБОТКА КЛИКОВ С ЗАЩИТОЙ ---
+        // ----- Обработка кликов с защитой -----
         function handleClick(x, y) {
             const now = performance.now();
             
             // Проверка на автокликер
-            if (isAutoclickerDetected(now)) {
+            if (isAutoclicker(now)) {
                 return; // Блокируем клик
             }
 
@@ -409,7 +396,7 @@
 
         clickBtn.addEventListener('contextmenu', (e) => e.preventDefault());
 
-        // --- ЛИДЕРБОРД ---
+        // ----- Лидерборд -----
         const usersRef = ref(db, 'users');
         onValue(usersRef, (snapshot) => {
             const data = snapshot.val();
@@ -435,7 +422,7 @@
                 .replace(/'/g, '&#39;');
         }
 
-        // --- ЧАСТИЦЫ ---
+        // ----- Частицы (монетки) -----
         function createParticle(x, y) {
             const p = document.createElement('img');
             p.src = 'https://abrakadabra.fun/uploads/posts/2021-12/1640762606_1-abrakadabra-fun-p-monetka-na-prozrachnom-fone-1.png';
