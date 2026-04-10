@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Мировой Кликер 🛡️ (мягкая защита)</title>
+    <title>Мировой Кликер </title>
     <style>
         * {
             box-sizing: border-box;
@@ -21,6 +21,7 @@
             overflow-x: hidden;
             position: relative;
             padding: 12px;
+            padding-bottom: 70px;
         }
         #score-board {
             position: fixed;
@@ -53,37 +54,40 @@
             outline: none;
             user-select: none;
             touch-action: manipulation;
-            margin-top: 10vh;
+            margin-top: 5vh;
+            margin-bottom: 20px;
         }
         #click-button:active {
             transform: scale(0.94);
             box-shadow: 0 6px 0 #b85e00, 0 12px 20px rgba(0,0,0,0.3);
         }
+
+        /* ЛИДЕРБОРД СНИЗУ, РАСКРЫВАЕТСЯ ВНИЗ */
         #leaderboard {
             position: fixed;
-            right: 12px;
-            top: 80px;
-            width: calc(100% - 24px);
-            max-width: 300px;
-            background: rgba(10, 15, 25, 0.85);
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            background: rgba(10, 15, 25, 0.9);
             backdrop-filter: blur(8px);
             color: white;
-            border-radius: 24px;
+            border-radius: 20px 20px 0 0;
             z-index: 20;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,215,0,0.3);
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+            border-top: 1px solid rgba(255,215,0,0.3);
             overflow: hidden;
-            transition: max-height 0.3s;
+            transition: max-height 0.3s ease;
         }
         #leaderboard.collapsed {
-            max-height: 60px;
+            max-height: 55px;
         }
         #leaderboard:not(.collapsed) {
-            max-height: 500px;
+            max-height: 45vh;
         }
         #leader-header {
-            padding: 16px 18px;
-            font-size: 22px;
+            padding: 14px 18px;
+            font-size: 20px;
             font-weight: bold;
             display: flex;
             align-items: center;
@@ -94,50 +98,113 @@
             border-bottom: 1px solid rgba(255,255,255,0.2);
         }
         #leader-header span {
-            font-size: 28px;
+            font-size: 24px;
             transition: transform 0.3s;
         }
         #leaderboard.collapsed #leader-header span {
-            transform: rotate(-90deg);
+            transform: rotate(180deg);
         }
         #leader-list {
-            padding: 12px 18px 18px;
-            max-height: 350px;
+            padding: 10px 18px 15px;
+            max-height: calc(45vh - 55px);
             overflow-y: auto;
         }
         .entry {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 18px;
-            padding: 4px 0;
+            margin-bottom: 8px;
+            font-size: 16px;
+            padding: 3px 0;
         }
         .entry span {
-            max-width: 170px;
+            max-width: 180px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
         .entry b {
             color: #ffd966;
-            font-size: 20px;
+            font-size: 18px;
         }
+
         #change-player {
             position: fixed;
             left: 12px;
             top: 20px;
             background: rgba(0,0,0,0.5);
             color: white;
-            border: 1px solid rgba(255,255,255,0.3);
+            border: none;
             padding: 10px 18px;
             border-radius: 40px;
             font-size: 16px;
             cursor: pointer;
             z-index: 15;
             backdrop-filter: blur(4px);
-            touch-action: manipulation;
-            border: none;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 480px) {
+            #change-player {
+                padding: 8px 14px;
+                font-size: 14px;
+            }
+            .entry {
+                font-size: 15px;
+            }
+            #leaderboard:not(.collapsed) {
+                max-height: 40vh;
+            }
+            #leader-list {
+                max-height: calc(40vh - 55px);
+            }
+        }
+
+        #warning-msg {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        #bot-warning {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #c0392b;
+            color: white;
+            padding: 30px 50px;
+            border-radius: 60px;
+            font-size: 32px;
+            font-weight: bold;
+            z-index: 300;
+            box-shadow: 0 0 40px rgba(0,0,0,0.7);
+            border: 4px solid #e74c3c;
+            text-align: center;
+            display: none;
+            white-space: nowrap;
+        }
+        #name-error {
+            position: fixed;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #e67e22;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            z-index: 150;
+            display: none;
         }
         .particle {
             position: fixed;
@@ -153,37 +220,6 @@
             0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
             100% { transform: translate(var(--x), var(--y)) rotate(360deg); opacity: 0; }
         }
-        @media (max-width: 480px) {
-            #leaderboard {
-                right: 8px;
-                top: 80px;
-                width: calc(100% - 16px);
-            }
-            #change-player {
-                padding: 8px 14px;
-                font-size: 14px;
-            }
-            .entry {
-                font-size: 16px;
-            }
-        }
-        #warning-msg {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(231, 76, 60, 0.9);
-            color: white;
-            padding: 8px 20px;
-            border-radius: 30px;
-            font-size: 14px;
-            backdrop-filter: blur(4px);
-            z-index: 200;
-            opacity: 0;
-            transition: opacity 0.2s;
-            pointer-events: none;
-            white-space: nowrap;
-        }
     </style>
 </head>
 <body>
@@ -192,21 +228,22 @@
         <span id="count">0</span>
     </div>
 
-    <div id="leaderboard" class="">
+    <div id="leaderboard" class="collapsed">
         <div id="leader-header">
-            🏆 top players
+            🏆 Все игроки
             <span>▼</span>
         </div>
-        <div id="leader-list">loading...</div>
+        <div id="leader-list">Загрузка...</div>
     </div>
 
-    <button id="change-player">🔄 player</button>
+    <button id="change-player">🔄 игрок</button>
 
-    <button id="click-button">click!</button>
+    <button id="click-button">КЛИК!</button>
 
-    <div id="warning-msg">⚠️ Слишком быстро! Клик не засчитан</div>
+    <div id="warning-msg">⚠️ Слишком быстро!</div>
+    <div id="bot-warning">🤖 БОТ ОБНАРУЖЕН!<br>Счёт обнулён!</div>
+    <div id="name-error">❌ Имя занято!</div>
 
-    <!-- Import Map -->
     <script type="importmap">
         {
             "imports": {
@@ -218,232 +255,199 @@
 
     <script type="module">
         import { initializeApp } from "firebase/app";
-        import { getDatabase, ref, onValue, update, increment, set } from "firebase/database";
+        import { getDatabase, ref, onValue, update, increment, set, get, remove } from "firebase/database";
 
-        // Конфигурация
         const firebaseConfig = {
             databaseURL: "https://mygame-b11bf-default-rtdb.firebaseio.com/"
         };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Переменные
         let playerName = localStorage.getItem('clickerName');
         let score = 0;
         const countDisplay = document.getElementById('count');
         const leaderList = document.getElementById('leader-list');
         const clickBtn = document.getElementById('click-button');
         const warningMsg = document.getElementById('warning-msg');
+        const botWarning = document.getElementById('bot-warning');
+        const nameError = document.getElementById('name-error');
 
-        // ========== МЯГКАЯ ЗАЩИТА ОТ АВТОКЛИКЕРОВ ==========
-        // Настройки (можно менять под себя)
-        const ANTI_AUTOCLICKER = {
-            MIN_INTERVAL_MS: 80,        // Минимальный интервал 80 мс (~12 кликов/сек) — мягко
-            MAX_UNIFORM_CLICKS: 7,       // Проверяем равномерность только после 7 кликов подряд
-            UNIFORM_TOLERANCE_MS: 12,    // Допустимое отклонение 12 мс
-            WARNING_DURATION: 800        // Показывать предупреждение 0.8 сек
+        // Античит
+        const ANTI = {
+            MIN_INTERVAL_MS: 60,
+            MAX_UNIFORM: 8,
+            TOLERANCE: 12,
+            HUMAN_VAR: 4,
+            TOUCH_LIMIT: 2
         };
+        let lastClick = 0, suspicious = 0, intervals = [], botDetected = false, warnTimer;
 
-        let lastClickTime = 0;
-        let suspiciousCount = 0;
-        let recentIntervals = [];
-        let warningTimer = null;
-
-        function showWarning() {
-            if (warningTimer) clearTimeout(warningTimer);
-            warningMsg.style.opacity = '1';
-            warningTimer = setTimeout(() => {
-                warningMsg.style.opacity = '0';
-            }, ANTI_AUTOCLICKER.WARNING_DURATION);
+        function isBot() {
+            return navigator.webdriver || window.outerWidth === 0 || window.outerHeight === 0 || !navigator.languages.length;
         }
 
-        function isAutoclicker(now) {
-            if (lastClickTime === 0) {
-                lastClickTime = now;
-                return false;
-            }
+        async function punishBot() {
+            if (botDetected) return;
+            botDetected = true;
+            botWarning.style.display = 'block';
+            setTimeout(() => botWarning.style.display = 'none', 3000);
+            score = 0;
+            countDisplay.innerText = '0';
+            await set(ref(db, 'users/' + playerName), { score: 0 });
+            lastClick = 0; suspicious = 0; intervals = [];
+        }
 
-            const interval = now - lastClickTime;
-            let blocked = false;
+        function showWarning(text) {
+            if (warnTimer) clearTimeout(warnTimer);
+            warningMsg.textContent = text || '⚠️ Слишком быстро!';
+            warningMsg.style.opacity = '1';
+            warnTimer = setTimeout(() => warningMsg.style.opacity = '0', 1000);
+        }
 
-            // 1. Слишком частые клики
-            if (interval < ANTI_AUTOCLICKER.MIN_INTERVAL_MS) {
-                suspiciousCount++;
-                blocked = true;
+        function showNameError() {
+            nameError.style.display = 'block';
+            setTimeout(() => nameError.style.display = 'none', 2000);
+        }
+
+        function isAutoclicker(now, touches = 1) {
+            if (botDetected || isBot()) { punishBot(); return true; }
+            if (lastClick === 0) { lastClick = now; return false; }
+
+            const int = now - lastClick;
+            let block = false;
+
+            if (int < ANTI.MIN_INTERVAL_MS) {
+                suspicious += 2; block = true;
             } else {
-                // 2. Проверка на роботизированную равномерность
-                recentIntervals.push(interval);
-                if (recentIntervals.length > ANTI_AUTOCLICKER.MAX_UNIFORM_CLICKS) {
-                    recentIntervals.shift();
-                }
-
-                if (recentIntervals.length >= ANTI_AUTOCLICKER.MAX_UNIFORM_CLICKS) {
-                    const avg = recentIntervals.reduce((a, b) => a + b, 0) / recentIntervals.length;
-                    const allSimilar = recentIntervals.every(int => 
-                        Math.abs(int - avg) <= ANTI_AUTOCLICKER.UNIFORM_TOLERANCE_MS
-                    );
-                    if (allSimilar) {
-                        suspiciousCount += 2; // Сильнее повышаем подозрения
-                        blocked = true;
-                    } else {
-                        // Постепенно снижаем подозрения при нормальной игре
-                        suspiciousCount = Math.max(0, suspiciousCount - 1);
-                    }
+                intervals.push(int);
+                if (intervals.length > ANTI.MAX_UNIFORM) intervals.shift();
+                if (intervals.length >= ANTI.MAX_UNIFORM) {
+                    const avg = intervals.reduce((a,b) => a+b, 0) / intervals.length;
+                    const uniform = intervals.every(i => Math.abs(i - avg) <= ANTI.TOLERANCE);
+                    const varied = intervals.some((v,i,a) => i>0 && Math.abs(v - a[i-1]) >= ANTI.HUMAN_VAR);
+                    if (uniform && !varied) { suspicious += 3; block = true; }
+                    else suspicious = Math.max(0, suspicious - 1);
                 }
             }
+            if (touches > ANTI.TOUCH_LIMIT) { suspicious += 1; block = true; }
 
-            if (blocked) {
+            if (block) {
                 showWarning();
-                // Если подозрений накопилось много, временно блокируем кнопку (визуально не меняем, просто игнорим клики)
-                if (suspiciousCount > 15) {
-                    // Можно добавить дополнительную задержку, но оставим просто игнор
-                }
+                if (suspicious > 20) punishBot();
                 return true;
             } else {
-                lastClickTime = now;
+                lastClick = now;
                 return false;
             }
         }
 
-        // ----- Сворачивание лидерборда -----
-        const leaderboardDiv = document.getElementById('leaderboard');
-        const leaderHeader = document.getElementById('leader-header');
-        leaderHeader.addEventListener('click', (e) => {
+        // Лидерборд
+        const lb = document.getElementById('leaderboard');
+        document.getElementById('leader-header').addEventListener('click', (e) => {
             e.stopPropagation();
-            leaderboardDiv.classList.toggle('collapsed');
+            lb.classList.toggle('collapsed');
         });
-        if (window.innerWidth <= 600) {
-            leaderboardDiv.classList.add('collapsed');
-        }
 
-        // ----- Управление игроком -----
-        function askNewName() {
-            const newName = prompt("Введите ваш ник:", "Игрок_" + Math.floor(Math.random() * 1000));
-            if (newName) {
-                playerName = newName;
-                localStorage.setItem('clickerName', playerName);
-            } else {
-                playerName = "Гость_" + Math.floor(Math.random() * 1000);
-                localStorage.setItem('clickerName', playerName);
+        // Смена имени с удалением старого аккаунта
+        async function askNewName() {
+            const newName = prompt("Новый ник:", playerName || "Игрок_"+Math.floor(Math.random()*1000));
+            if (!newName) return;
+            
+            const snap = await get(ref(db, 'users/' + newName));
+            if (snap.exists()) { showNameError(); return; }
+            
+            const oldName = playerName;
+            const oldScore = score;
+            
+            // Создаём запись с новым именем и текущим счётом
+            await set(ref(db, 'users/' + newName), { score: oldScore });
+            
+            // Удаляем старую запись
+            if (oldName) {
+                await remove(ref(db, 'users/' + oldName));
             }
-            setupPlayerSync();
+            
+            playerName = newName;
+            localStorage.setItem('clickerName', playerName);
+            
+            // Переподключаем слушатель для синхронизации с новым именем
+            setupSync();
         }
 
-        function setupPlayerSync() {
+        function setupSync() {
             const myRef = ref(db, 'users/' + playerName);
             onValue(myRef, (snap) => {
                 const val = snap.val();
-                if (val && typeof val.score === 'number') {
-                    score = val.score;
-                    countDisplay.innerText = score;
-                } else {
-                    score = 0;
-                    countDisplay.innerText = '0';
-                    set(myRef, { score: 0 });
-                }
+                score = (val && typeof val.score === 'number') ? val.score : 0;
+                countDisplay.innerText = score;
+                if (!val) set(myRef, { score: 0 });
             });
         }
 
-        if (!playerName) {
-            askNewName();
-        } else {
-            setupPlayerSync();
-        }
-
-        document.getElementById('change-player').addEventListener('click', () => {
-            if (confirm('Сменить игрока? Прогресс сохранится. Change player? Progress will be saved.')) {
-                askNewName();
+        (async () => {
+            if (!playerName) {
+                let cand = "Игрок_"+Math.floor(Math.random()*1000);
+                while ((await get(ref(db, 'users/' + cand))).exists()) {
+                    cand = "Игрок_"+Math.floor(Math.random()*1000);
+                }
+                playerName = cand;
+                localStorage.setItem('clickerName', playerName);
             }
-        });
+            setupSync();
+        })();
 
-        // ----- Обработка кликов с защитой -----
-        function handleClick(x, y) {
-            const now = performance.now();
-            
-            // Проверка на автокликер
-            if (isAutoclicker(now)) {
-                return; // Блокируем клик
-            }
+        document.getElementById('change-player').addEventListener('click', askNewName);
 
-            // Увеличиваем счёт
+        function handleClick(x, y, touches = 1) {
+            if (isAutoclicker(performance.now(), touches)) return;
             score++;
             countDisplay.innerText = score;
-
-            // Отправляем в Firebase
-            const userRef = ref(db, 'users/' + playerName);
-            update(userRef, {
-                score: increment(1)
-            }).catch(err => console.warn("Ошибка обновления:", err));
-
-            // Частица
+            update(ref(db, 'users/' + playerName), { score: increment(1) }).catch(console.warn);
             createParticle(x, y);
         }
 
-        // Обработчик для мыши
         clickBtn.addEventListener('click', (e) => {
             if (e.pointerType === 'touch') return;
-            handleClick(e.clientX, e.clientY);
+            handleClick(e.clientX, e.clientY, 1);
         });
-
-        // Обработчик для касаний (мобильные)
         clickBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            const touch = e.touches[0];
-            if (touch) {
-                handleClick(touch.clientX, touch.clientY);
-            }
+            const t = e.touches[0];
+            if (t) handleClick(t.clientX, t.clientY, e.touches.length);
         }, { passive: false });
+        clickBtn.addEventListener('contextmenu', e => e.preventDefault());
 
-        clickBtn.addEventListener('contextmenu', (e) => e.preventDefault());
-
-        // ----- Лидерборд -----
-        const usersRef = ref(db, 'users');
-        onValue(usersRef, (snapshot) => {
-            const data = snapshot.val();
-            if (!data) {
-                leaderList.innerHTML = '<div class="entry">Нет данных</div>';
-                return;
-            }
+        // Все игроки
+        onValue(ref(db, 'users'), (snap) => {
+            const data = snap.val();
+            if (!data) { leaderList.innerHTML = '<div class="entry">Пусто</div>'; return; }
             const sorted = Object.entries(data)
-                .map(([name, val]) => ({ name, score: val.score || 0 }))
-                .sort((a, b) => b.score - a.score)
-                .slice(0, 10);
-            leaderList.innerHTML = sorted.map(user => 
-                `<div class="entry"><span>${escapeHTML(user.name)}</span><b>${user.score}</b></div>`
+                .map(([n, v]) => ({ name: n, score: v.score || 0 }))
+                .sort((a,b) => b.score - a.score);
+            leaderList.innerHTML = sorted.map(u => 
+                `<div class="entry"><span>${escapeHTML(u.name)}</span><b>${u.score}</b></div>`
             ).join('');
         });
 
-        function escapeHTML(str) {
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
+        function escapeHTML(s) {
+            return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
         }
 
-        // ----- Частицы (монетки) -----
         function createParticle(x, y) {
             const p = document.createElement('img');
             p.src = 'https://abrakadabra.fun/uploads/posts/2021-12/1640762606_1-abrakadabra-fun-p-monetka-na-prozrachnom-fone-1.png';
             p.className = 'particle';
-            
             const dx = (Math.random() - 0.5) * 250;
             const dy = (Math.random() - 0.5) * 250 - 50;
-            
             p.style.left = (x - 25) + 'px';
             p.style.top  = (y - 25) + 'px';
             p.style.setProperty('--x', dx + 'px');
             p.style.setProperty('--y', dy + 'px');
-            
             document.body.appendChild(p);
-            setTimeout(() => { if (p.parentNode) p.remove(); }, 600);
+            setTimeout(() => p.remove(), 600);
         }
 
-        // Глобальная функция (если вызывается из HTML)
-        window.makeClick = function(event) {
-            if (event) handleClick(event.clientX, event.clientY);
-        };
+        window.makeClick = (e) => { if(e) handleClick(e.clientX, e.clientY); };
     </script>
 </body>
 </html>
