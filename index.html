@@ -233,9 +233,6 @@
             }
         }
 
-        #warning-msg, #bot-warning, #name-error {
-            /* ... оставлены без изменений для краткости, они есть в полном коде ниже */
-        }
         .particle {
             position: fixed;
             pointer-events: none;
@@ -287,8 +284,6 @@
         </div>
     </div>
 
-    <div id="warning-msg" style="position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(231,76,60,0.9); color:white; padding:8px 20px; border-radius:30px; font-size:14px; backdrop-filter:blur(4px); z-index:200; opacity:0; transition:opacity 0.2s; pointer-events:none;">⚠️ Слишком быстро!</div>
-    <div id="bot-warning" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#c0392b; color:white; padding:30px 50px; border-radius:60px; font-size:32px; font-weight:bold; z-index:300; box-shadow:0 0 40px rgba(0,0,0,0.7); border:4px solid #e74c3c; text-align:center; display:none;">🤖 БОТ ОБНАРУЖЕН!<br>Счёт обнулён!</div>
     <div id="name-error" style="position:fixed; bottom:120px; left:50%; transform:translateX(-50%); background:#e67e22; color:white; padding:10px 20px; border-radius:30px; z-index:150; display:none;">❌ Имя занято!</div>
 
     <script type="importmap">
@@ -319,8 +314,6 @@
         const countDisplay = document.getElementById('count');
         const leaderList = document.getElementById('leader-list');
         const clickBtn = document.getElementById('click-button');
-        const warningMsg = document.getElementById('warning-msg');
-        const botWarning = document.getElementById('bot-warning');
         const nameError = document.getElementById('name-error');
         
         // Профиль
@@ -336,73 +329,7 @@
         const avatarFileInput = document.getElementById('avatar-file-input');
         const profileClose = document.getElementById('profile-close');
 
-        // Античит (10 пальцев)
-        const ANTI = {
-            MIN_INTERVAL_MS: 60,
-            MAX_UNIFORM: 8,
-            TOLERANCE: 15,
-            HUMAN_VAR: 5,
-            TOUCH_LIMIT: 10
-        };
-        let lastClick = 0, suspicious = 0, intervals = [], botDetected = false, warnTimer;
-
-        function isBot() {
-            return navigator.webdriver || window.outerWidth === 0 || window.outerHeight === 0 || !navigator.languages.length;
-        }
-
-        async function punishBot() {
-            if (botDetected) return;
-            botDetected = true;
-            botWarning.style.display = 'block';
-            setTimeout(() => botWarning.style.display = 'none', 3000);
-            score = 0;
-            countDisplay.innerText = '0';
-            await set(ref(db, 'users/' + playerName + '/score'), 0);
-            lastClick = 0; suspicious = 0; intervals = [];
-        }
-
-        function showWarning(text) {
-            if (warnTimer) clearTimeout(warnTimer);
-            warningMsg.textContent = text || '⚠️ Слишком быстро!';
-            warningMsg.style.opacity = '1';
-            warnTimer = setTimeout(() => warningMsg.style.opacity = '0', 1000);
-        }
-
-        function showNameError() {
-            nameError.style.display = 'block';
-            setTimeout(() => nameError.style.display = 'none', 2000);
-        }
-
-        function isAutoclicker(now, touches = 1) {
-            if (botDetected || isBot()) { punishBot(); return true; }
-            if (lastClick === 0) { lastClick = now; return false; }
-            const int = now - lastClick;
-            let block = false;
-            if (int < ANTI.MIN_INTERVAL_MS) {
-                suspicious += 2; block = true;
-            } else {
-                intervals.push(int);
-                if (intervals.length > ANTI.MAX_UNIFORM) intervals.shift();
-                if (intervals.length >= ANTI.MAX_UNIFORM) {
-                    const avg = intervals.reduce((a,b) => a+b, 0) / intervals.length;
-                    const uniform = intervals.every(i => Math.abs(i - avg) <= ANTI.TOLERANCE);
-                    const varied = intervals.some((v,i,a) => i>0 && Math.abs(v - a[i-1]) >= ANTI.HUMAN_VAR);
-                    if (uniform && !varied) { suspicious += 3; block = true; }
-                    else suspicious = Math.max(0, suspicious - 1);
-                }
-            }
-            if (touches > ANTI.TOUCH_LIMIT) { suspicious += 1; block = true; }
-            if (block) {
-                showWarning();
-                if (suspicious > 20) punishBot();
-                return true;
-            } else {
-                lastClick = now;
-                return false;
-            }
-        }
-
-        // Лидерборд
+        // === ЛИДЕРБОРД ===
         const lb = document.getElementById('leaderboard');
         document.getElementById('leader-header').addEventListener('click', (e) => {
             e.stopPropagation();
@@ -410,7 +337,6 @@
         });
 
         // === ПРОФИЛЬ ===
-        // Открыть панель
         profileBtn.addEventListener('click', () => {
             updateProfileUI();
             profilePanel.style.display = 'flex';
@@ -434,9 +360,12 @@
             const newName = prompt("Новый ник:", playerName);
             if (!newName) return;
             const snap = await get(ref(db, 'users/' + newName));
-            if (snap.exists()) { showNameError(); return; }
+            if (snap.exists()) { 
+                nameError.style.display = 'block';
+                setTimeout(() => nameError.style.display = 'none', 2000);
+                return; 
+            }
             
-            // Переносим данные
             const oldProfileRef = ref(db, 'users/' + playerName);
             const oldSnap = await get(oldProfileRef);
             const oldData = oldSnap.val() || {};
@@ -470,7 +399,6 @@
                     const compressed = canvas.toDataURL('image/jpeg', 0.7);
                     avatarBase64 = compressed;
                     profileAvatar.src = compressed;
-                    // Сохраняем в Firebase
                     update(ref(db, 'users/' + playerName + '/profile'), { avatar: compressed });
                 };
                 img.src = ev.target.result;
@@ -490,7 +418,6 @@
                 
                 countDisplay.innerText = score;
                 if (!data.joinDate) {
-                    // Первый вход
                     const today = new Date().toLocaleDateString();
                     set(ref(db, 'users/' + playerName), {
                         score: 0,
@@ -515,9 +442,8 @@
             setupSync();
         })();
 
-        // Клики
-        function handleClick(x, y, touches = 1) {
-            if (isAutoclicker(performance.now(), touches)) return;
+        // === КЛИКИ (БЕЗ АНТИЧИТА) ===
+        function handleClick(x, y) {
             score++;
             totalClicks++;
             countDisplay.innerText = score;
@@ -530,16 +456,16 @@
 
         clickBtn.addEventListener('click', (e) => {
             if (e.pointerType === 'touch') return;
-            handleClick(e.clientX, e.clientY, 1);
+            handleClick(e.clientX, e.clientY);
         });
         clickBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
             const t = e.touches[0];
-            if (t) handleClick(t.clientX, t.clientY, e.touches.length);
+            if (t) handleClick(t.clientX, t.clientY);
         }, { passive: false });
         clickBtn.addEventListener('contextmenu', e => e.preventDefault());
 
-        // Все игроки для лидерборда (используем score)
+        // === ЛИДЕРБОРД (ВСЕ ИГРОКИ) ===
         onValue(ref(db, 'users'), (snap) => {
             const data = snap.val();
             if (!data) { leaderList.innerHTML = '<div class="entry">Пусто</div>'; return; }
