@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Мировой Кликер 👑</title>
+    <title>Мировой Кликер 👑✨</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
@@ -25,64 +25,81 @@
             box-shadow: 0 12px 0 #b85e00, 0 20px 30px rgba(0,0,0,0.3);
             cursor: pointer; font-weight: bold; font-size: min(10vw, 48px);
             color: white; text-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            transition: transform 0.05s ease; position: relative; z-index: 5;
+            transition: transform 0.08s ease, box-shadow 0.08s ease;
+            position: relative; z-index: 5;
             outline: none; user-select: none; touch-action: manipulation;
             margin-top: 5vh; margin-bottom: 20px;
+            will-change: transform, box-shadow;
         }
-        #click-button:active { transform: scale(0.94); }
+        #click-button:active { 
+            transform: scale(0.92); 
+            box-shadow: 0 6px 0 #b85e00, 0 12px 20px rgba(0,0,0,0.3);
+        }
 
-        /* Скины кнопки с !important для переопределения */
+        /* Скины с сиянием */
         .skin-green { 
             background: radial-gradient(circle at 30% 30%, #2ecc71, #27ae60) !important; 
-            box-shadow: 0 12px 0 #1e8449, 0 20px 30px rgba(0,0,0,0.3) !important; 
+            box-shadow: 0 12px 0 #1e8449, 0 0 20px #2ecc71 !important; 
+            animation: glowPulse 2s infinite !important;
         }
         .skin-blue { 
             background: radial-gradient(circle at 30% 30%, #3498db, #2980b9) !important; 
-            box-shadow: 0 12px 0 #1f618d, 0 20px 30px rgba(0,0,0,0.3) !important; 
+            box-shadow: 0 12px 0 #1f618d, 0 0 20px #3498db !important; 
+            animation: glowPulse 2s infinite !important;
         }
         .skin-purple { 
             background: radial-gradient(circle at 30% 30%, #9b59b6, #8e44ad) !important; 
-            box-shadow: 0 12px 0 #6c3483, 0 20px 30px rgba(0,0,0,0.3) !important; 
+            box-shadow: 0 12px 0 #6c3483, 0 0 20px #9b59b6 !important; 
+            animation: glowPulse 2s infinite !important;
         }
         .skin-black { 
             background: radial-gradient(circle at 30% 30%, #5d6d7e, #2c3e50) !important; 
-            box-shadow: 0 12px 0 #1a252f, 0 20px 30px rgba(0,0,0,0.5) !important; 
+            box-shadow: 0 12px 0 #1a252f, 0 0 20px #5d6d7e !important; 
+            animation: glowPulse 2s infinite !important;
         }
         .skin-gold { 
             background: radial-gradient(circle at 30% 30%, #f1c40f, #d4ac0d) !important; 
-            box-shadow: 0 12px 0 #b8860b, 0 0 25px #f1c40f !important; 
+            box-shadow: 0 12px 0 #b8860b, 0 0 30px #f1c40f !important; 
+            animation: glowPulse 1.5s infinite !important;
         }
         .skin-red { 
             background: radial-gradient(circle at 30% 30%, #e74c3c, #c0392b) !important; 
-            box-shadow: 0 12px 0 #922b21, 0 0 15px #e74c3c !important; 
+            box-shadow: 0 12px 0 #922b21, 0 0 25px #e74c3c !important; 
+            animation: glowPulse 2s infinite !important;
         }
         .skin-rainbow { 
             background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet) !important; 
-            box-shadow: 0 12px 0 #6c3483, 0 0 25px gold !important; 
+            box-shadow: 0 12px 0 #6c3483, 0 0 30px gold !important; 
+            animation: glowPulse 2s infinite !important;
         }
         .skin-social { 
             background: radial-gradient(circle at 30% 30%, #1abc9c, #16a085) !important; 
-            box-shadow: 0 12px 0 #117a65, 0 20px 30px rgba(0,0,0,0.3) !important; 
+            box-shadow: 0 12px 0 #117a65, 0 0 20px #1abc9c !important; 
+            animation: glowPulse 2s infinite !important;
         }
         .skin-silver { 
             background: radial-gradient(circle at 30% 30%, #bdc3c7, #95a5a6) !important; 
-            box-shadow: 0 12px 0 #7f8c8d, 0 20px 30px rgba(0,0,0,0.3) !important; 
+            box-shadow: 0 12px 0 #7f8c8d, 0 0 20px #bdc3c7 !important; 
+            animation: glowPulse 2s infinite !important;
         }
-        
-        /* Легендарный переливающийся скин */
         .skin-legendary {
             background: linear-gradient(45deg, #ffd700, #ff8c00, #ff0080, #8000ff, #00bfff, #00ff80, #ffd700) !important;
             background-size: 400% 400% !important;
-            animation: legendaryShine 3s ease infinite !important;
-            box-shadow: 0 12px 0 #b8860b, 0 0 40px #ffd700 !important;
+            animation: legendaryShine 3s ease infinite, glowPulse 2s infinite !important;
+            box-shadow: 0 12px 0 #b8860b, 0 0 50px #ffd700 !important;
             border: 2px solid rgba(255, 215, 0, 0.8) !important;
         }
+        @keyframes glowPulse {
+            0% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+            100% { filter: brightness(1); }
+        }
         @keyframes legendaryShine {
-            0% { background-position: 0% 50%; box-shadow: 0 12px 0 #b8860b, 0 0 40px #ffd700; }
-            25% { box-shadow: 0 12px 0 #b8860b, 0 0 50px #ff0080; }
-            50% { background-position: 100% 50%; box-shadow: 0 12px 0 #b8860b, 0 0 50px #8000ff; }
-            75% { box-shadow: 0 12px 0 #b8860b, 0 0 50px #00bfff; }
-            100% { background-position: 0% 50%; box-shadow: 0 12px 0 #b8860b, 0 0 40px #ffd700; }
+            0% { background-position: 0% 50%; box-shadow: 0 12px 0 #b8860b, 0 0 50px #ffd700; }
+            25% { box-shadow: 0 12px 0 #b8860b, 0 0 60px #ff0080; }
+            50% { background-position: 100% 50%; box-shadow: 0 12px 0 #b8860b, 0 0 60px #8000ff; }
+            75% { box-shadow: 0 12px 0 #b8860b, 0 0 60px #00bfff; }
+            100% { background-position: 0% 50%; box-shadow: 0 12px 0 #b8860b, 0 0 50px #ffd700; }
         }
 
         /* Лидерборд снизу */
@@ -112,7 +129,6 @@
         .entry span { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .entry b { color: #ffd966; font-size: 18px; }
 
-        /* Кнопка профиля */
         #profile-btn {
             position: fixed; left: 12px; top: 20px;
             background: rgba(0,0,0,0.5); color: white; border: none;
@@ -121,7 +137,6 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        /* Панель профиля */
         #profile-panel {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
@@ -130,8 +145,8 @@
         }
         #profile-card {
             background: #1e2a3a; border-radius: 30px; padding: 25px;
-            width: 100%; max-width: 400px; color: white;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto;
+            color: white; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
             border: 1px solid #f1c40f; text-align: center;
         }
         #profile-avatar {
@@ -190,19 +205,20 @@
         }
         #avatar-file-input { display: none; }
 
-        /* Частицы */
+        /* Частицы с улучшенной анимацией */
         .particle {
             position: fixed; pointer-events: none; width: 50px; height: 50px;
             z-index: 100; animation: fly 0.6s ease-out forwards;
             filter: drop-shadow(0 6px 8px rgba(0,0,0,0.3));
             will-change: transform, opacity;
+            transform: translate3d(0,0,0);
+            backface-visibility: hidden;
         }
         @keyframes fly {
-            0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
-            100% { transform: translate(var(--x), var(--y)) rotate(360deg); opacity: 0; }
+            0% { opacity: 1; transform: translate3d(0, 0, 0) rotate(0deg); }
+            100% { transform: translate3d(var(--x), var(--y), 0) rotate(360deg); opacity: 0; }
         }
 
-        /* Уведомление о достижении */
         #achievement-toast {
             position: fixed; top: 100px; left: 50%; transform: translateX(-50%);
             background: #1e2a3a; color: white; padding: 15px 25px;
@@ -237,13 +253,11 @@
     <button id="profile-btn">👤 Профиль</button>
     <button id="click-button">КЛИК!</button>
 
-    <!-- Уведомление о достижении -->
     <div id="achievement-toast">
         <span id="toast-icon">🏆</span>
         <span id="toast-text">Достижение разблокировано!</span>
     </div>
 
-    <!-- Панель профиля -->
     <div id="profile-panel">
         <div id="profile-card">
             <img id="profile-avatar" src="https://abrakadabra.fun/uploads/posts/2021-12/1640762606_1-abrakadabra-fun-p-monetka-na-prozrachnom-fone-1.png" alt="Аватар">
@@ -251,14 +265,12 @@
             <button id="change-avatar-btn">📷 Загрузить аватар</button>
             <input type="file" id="avatar-file-input" accept="image/*">
             
-            <!-- Вкладки -->
             <div class="profile-tabs">
                 <button class="profile-tab active" data-tab="stats">📊 Статистика</button>
                 <button class="profile-tab" data-tab="achievements">🏆 Достижения</button>
                 <button class="profile-tab" data-tab="skins">🎨 Скины</button>
             </div>
 
-            <!-- Статистика -->
             <div id="tab-stats" class="tab-content">
                 <div class="stat-row"><span>Всего кликов:</span> <span id="total-clicks">0</span></div>
                 <div class="stat-row"><span>Текущий счёт:</span> <span id="current-score">0</span></div>
@@ -267,12 +279,10 @@
                 <button id="change-name-btn" style="background: #9b59b6; width: 100%; padding: 12px; border: none; border-radius: 30px; color: white; font-size: 16px; cursor: pointer; margin-top: 10px;">✏️ Сменить ник</button>
             </div>
 
-            <!-- Достижения -->
             <div id="tab-achievements" class="tab-content">
-                <div id="achievements-list"></div>
+                <div id="achievements-list" style="max-height: 350px; overflow-y: auto; padding-right: 5px;"></div>
             </div>
 
-            <!-- Скины -->
             <div id="tab-skins" class="tab-content">
                 <div class="skins-grid" id="skins-grid"></div>
             </div>
@@ -300,22 +310,26 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // ========== ДОСТИЖЕНИЯ ==========
+        // ========== 16 ДОСТИЖЕНИЙ ==========
         const ACHIEVEMENTS = [
             { id: 'first_click', name: 'Первый клик', desc: 'Сделать 1 клик', icon: '🥇', skin: null, condition: (s) => s.totalClicks >= 1 },
             { id: 'novice', name: 'Новичок', desc: '100 кликов', icon: '💯', skin: 'green', condition: (s) => s.totalClicks >= 100 },
             { id: 'amateur', name: 'Любитель', desc: '1 000 кликов', icon: '🔥', skin: 'blue', condition: (s) => s.totalClicks >= 1000 },
             { id: 'pro', name: 'Профи', desc: '10 000 кликов', icon: '🚀', skin: 'purple', condition: (s) => s.totalClicks >= 10000 },
+            { id: 'master_clicker', name: 'Мастер кликов', desc: '100 000 кликов', icon: '💪', skin: null, condition: (s) => s.totalClicks >= 100000 },
+            { id: 'legend_clicker', name: 'Легенда кликов', desc: '500 000 кликов', icon: '🌟', skin: null, condition: (s) => s.totalClicks >= 500000 },
+            { id: 'millionaire', name: 'Миллионер', desc: '1 000 000 кликов', icon: '💰', skin: null, condition: (s) => s.totalClicks >= 1000000 },
             { id: 'night_owl', name: 'Полуночник', desc: 'Клик с 00:00 до 06:00', icon: '🌙', skin: 'black', condition: () => { const h = new Date().getHours(); return h >= 0 && h < 6; } },
             { id: 'regular', name: 'Завсегдатай', desc: 'Зайти 7 дней подряд', icon: '📅', skin: 'gold', condition: (s) => s.loginStreak >= 7 },
+            { id: 'month_regular', name: 'Месячный завсегдатай', desc: 'Зайти 30 дней подряд', icon: '📆', skin: null, condition: (s) => s.loginStreak >= 30 },
             { id: 'speedy', name: 'Скоростной', desc: '20 кликов за 1 сек', icon: '⚡', skin: 'red', condition: (s) => s.maxCps >= 20 },
+            { id: 'lightning', name: 'Молниеносный', desc: '50 кликов за 1 сек', icon: '🌩️', skin: null, condition: (s) => s.maxCps >= 50 },
             { id: 'stylish', name: 'Стиляга', desc: 'Сменить аватар', icon: '🎨', skin: 'rainbow', condition: (s) => s.avatarChanged },
             { id: 'social', name: 'Социальный', desc: 'Сменить ник', icon: '🤝', skin: 'social', condition: (s) => s.nameChanged },
-            { id: 'collector', name: 'Коллекционер', desc: 'Открыть 5 достижений', icon: '💎', skin: 'silver', condition: (s) => s.unlockedCount >= 5 },
-            { id: 'master', name: 'Мастер', desc: 'Открыть ВСЕ достижения', icon: '👑', skin: 'legendary', condition: (s) => s.unlockedCount >= 11 }
+            { id: 'collector', name: 'Коллекционер', desc: 'Открыть 8 достижений', icon: '💎', skin: 'silver', condition: (s) => s.unlockedCount >= 8 },
+            { id: 'master', name: 'Мастер', desc: 'Открыть ВСЕ достижения (16)', icon: '👑', skin: 'legendary', condition: (s) => s.unlockedCount >= 16 }
         ];
 
-        // Скины
         const SKINS = {
             default: { name: 'Обычный', class: '' },
             green: { name: 'Зелёный', class: 'skin-green' },
@@ -345,7 +359,6 @@
         const toastIcon = document.getElementById('toast-icon');
         const toastText = document.getElementById('toast-text');
 
-        // Профиль
         const profileBtn = document.getElementById('profile-btn');
         const profilePanel = document.getElementById('profile-panel');
         const profileAvatar = document.getElementById('profile-avatar');
@@ -361,10 +374,8 @@
         const achievementsList = document.getElementById('achievements-list');
         const skinsGrid = document.getElementById('skins-grid');
 
-        // Клики для CPS
         let clickTimes = [];
 
-        // ========== УВЕДОМЛЕНИЕ О ДОСТИЖЕНИИ ==========
         function showAchievementToast(achievement) {
             toastIcon.textContent = achievement.icon;
             toastText.textContent = `${achievement.name} разблокировано!`;
@@ -372,32 +383,33 @@
             setTimeout(() => achievementToast.style.display = 'none', 3000);
         }
 
-        // ========== ПРОВЕРКА ДОСТИЖЕНИЙ ==========
         async function checkAchievements() {
-            const stats = {
-                totalClicks, loginStreak, maxCps, avatarChanged, nameChanged,
-                unlockedCount: Object.values(unlockedAchievements).filter(a => a).length
-            };
+            const unlockedCount = Object.values(unlockedAchievements).filter(v => v).length;
+            const stats = { totalClicks, loginStreak, maxCps, avatarChanged, nameChanged, unlockedCount };
+
+            let updated = false;
+            let newUnlockedSkins = [...unlockedSkins];
 
             for (const ach of ACHIEVEMENTS) {
                 if (unlockedAchievements[ach.id]) continue;
-                
                 if (ach.condition(stats)) {
                     unlockedAchievements[ach.id] = true;
-                    if (ach.skin && !unlockedSkins.includes(ach.skin)) {
-                        unlockedSkins.push(ach.skin);
+                    if (ach.skin && !newUnlockedSkins.includes(ach.skin)) {
+                        newUnlockedSkins.push(ach.skin);
                     }
-                    
-                    await update(ref(db, 'users/' + playerName), {
-                        [`achievements/${ach.id}`]: true,
-                        unlockedSkins: unlockedSkins
-                    });
-                    
+                    updated = true;
                     showAchievementToast(ach);
                 }
             }
 
-            // Проверка на все достижения
+            if (updated) {
+                await update(ref(db, 'users/' + playerName), {
+                    achievements: unlockedAchievements,
+                    unlockedSkins: newUnlockedSkins
+                });
+                unlockedSkins = newUnlockedSkins;
+            }
+
             const allUnlocked = ACHIEVEMENTS.every(a => unlockedAchievements[a.id]);
             if (allUnlocked && !hasCrown) {
                 hasCrown = true;
@@ -409,25 +421,23 @@
             updateProfileUI();
         }
 
-        // ========== РЕНДЕР ДОСТИЖЕНИЙ ==========
         function renderAchievements() {
             const unlockedCount = Object.values(unlockedAchievements).filter(v => v).length;
-            
             achievementsList.innerHTML = ACHIEVEMENTS.map(ach => {
                 const unlocked = unlockedAchievements[ach.id] || false;
                 let progress = 0;
                 if (!unlocked) {
-                    if (ach.id === 'first_click' || ach.id === 'novice' || ach.id === 'amateur' || ach.id === 'pro') {
-                        const target = ach.id === 'first_click' ? 1 : ach.id === 'novice' ? 100 : ach.id === 'amateur' ? 1000 : 10000;
+                    if (ach.id.includes('click') || ach.id === 'first_click' || ach.id === 'novice' || ach.id === 'amateur' || ach.id === 'pro' || ach.id === 'master_clicker' || ach.id === 'legend_clicker' || ach.id === 'millionaire') {
+                        const target = ach.id === 'first_click' ? 1 : ach.id === 'novice' ? 100 : ach.id === 'amateur' ? 1000 : ach.id === 'pro' ? 10000 : ach.id === 'master_clicker' ? 100000 : ach.id === 'legend_clicker' ? 500000 : 1000000;
                         progress = Math.min(100, (totalClicks / target) * 100);
                     } else if (ach.id === 'regular') {
                         progress = Math.min(100, (loginStreak / 7) * 100);
+                    } else if (ach.id === 'month_regular') {
+                        progress = Math.min(100, (loginStreak / 30) * 100);
                     } else if (ach.id === 'collector') {
-                        progress = Math.min(100, (unlockedCount / 5) * 100);
+                        progress = Math.min(100, (unlockedCount / 8) * 100);
                     } else if (ach.id === 'master') {
-                        progress = Math.min(100, (unlockedCount / 11) * 100);
-                    } else {
-                        progress = 0;
+                        progress = Math.min(100, (unlockedCount / 16) * 100);
                     }
                 } else {
                     progress = 100;
@@ -447,12 +457,10 @@
             }).join('');
         }
 
-        // ========== РЕНДЕР СКИНОВ ==========
         function renderSkins() {
             skinsGrid.innerHTML = Object.entries(SKINS).map(([id, skin]) => {
                 const unlocked = unlockedSkins.includes(id);
                 const selected = activeSkin === id;
-                
                 return `
                     <div class="skin-item ${unlocked ? '' : 'locked'} ${selected ? 'selected' : ''}" 
                          onclick="${unlocked ? `window.selectSkin('${id}')` : ''}">
@@ -463,31 +471,20 @@
             }).join('');
         }
 
-        // ========== ВЫБОР СКИНА (исправлено) ==========
         window.selectSkin = async function(skinId) {
             if (!unlockedSkins.includes(skinId)) return;
             activeSkin = skinId;
-            
-            // Полностью сбрасываем inline-стили
             clickBtn.style.background = '';
             clickBtn.style.boxShadow = '';
             clickBtn.style.animation = '';
             clickBtn.style.backgroundSize = '';
             clickBtn.style.border = '';
-            
-            // Удаляем все классы
             clickBtn.className = '';
-            
-            // Применяем новый класс
-            if (SKINS[skinId].class) {
-                clickBtn.classList.add(SKINS[skinId].class);
-            }
-            
+            if (SKINS[skinId].class) clickBtn.classList.add(SKINS[skinId].class);
             await update(ref(db, 'users/' + playerName), { activeSkin: skinId });
             renderSkins();
         };
 
-        // ========== ОБНОВЛЕНИЕ ПРОФИЛЯ ==========
         function updateProfileUI() {
             const displayName = hasCrown ? `👑 ${playerName}` : playerName;
             profileName.textContent = displayName;
@@ -498,7 +495,6 @@
             if (avatarBase64) profileAvatar.src = avatarBase64;
         }
 
-        // ========== СИНХРОНИЗАЦИЯ С FIREBASE ==========
         function setupSync() {
             const userRef = ref(db, 'users/' + playerName);
             onValue(userRef, async (snap) => {
@@ -517,23 +513,15 @@
                 nameChanged = data.nameChanged || false;
                 
                 countDisplay.innerText = score;
-                
-                // Применяем скин при загрузке
                 clickBtn.className = '';
-                if (SKINS[activeSkin]?.class) {
-                    clickBtn.classList.add(SKINS[activeSkin].class);
-                }
+                if (SKINS[activeSkin]?.class) clickBtn.classList.add(SKINS[activeSkin].class);
                 
-                // Проверка входа (streak)
                 const lastLogin = data.lastLogin || new Date().toDateString();
                 const today = new Date().toDateString();
                 if (lastLogin !== today) {
                     const yesterday = new Date(Date.now() - 86400000).toDateString();
                     const newStreak = (lastLogin === yesterday) ? loginStreak + 1 : 1;
-                    await update(userRef, { 
-                        lastLogin: today, 
-                        loginStreak: newStreak 
-                    });
+                    await update(userRef, { lastLogin: today, loginStreak: newStreak });
                 }
                 
                 if (!data.joinDate) {
@@ -551,20 +539,16 @@
             });
         }
 
-        // ========== ИНИЦИАЛИЗАЦИЯ ИГРОКА ==========
         (async () => {
             if (!playerName) {
                 let cand = "Игрок_"+Math.floor(Math.random()*1000);
-                while ((await get(ref(db, 'users/' + cand))).exists()) {
-                    cand = "Игрок_"+Math.floor(Math.random()*1000);
-                }
+                while ((await get(ref(db, 'users/' + cand))).exists()) cand = "Игрок_"+Math.floor(Math.random()*1000);
                 playerName = cand;
                 localStorage.setItem('clickerName', playerName);
             }
             setupSync();
         })();
 
-        // ========== ОБРАБОТЧИКИ ПРОФИЛЯ ==========
         profileBtn.addEventListener('click', () => {
             updateProfileUI();
             renderAchievements();
@@ -573,7 +557,6 @@
         });
         profileClose.addEventListener('click', () => profilePanel.style.display = 'none');
 
-        // Вкладки
         document.querySelectorAll('.profile-tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
@@ -585,7 +568,6 @@
             });
         });
 
-        // Смена ника
         changeNameBtn.addEventListener('click', async () => {
             const newName = prompt("Новый ник:", playerName);
             if (!newName) return;
@@ -602,7 +584,6 @@
             setupSync();
         });
 
-        // Смена аватара
         changeAvatarBtn.addEventListener('click', () => avatarFileInput.click());
         avatarFileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -619,21 +600,15 @@
                     const compressed = canvas.toDataURL('image/jpeg', 0.7);
                     avatarBase64 = compressed;
                     profileAvatar.src = compressed;
-                    update(ref(db, 'users/' + playerName), {
-                        'profile/avatar': compressed,
-                        avatarChanged: true
-                    });
+                    update(ref(db, 'users/' + playerName), { 'profile/avatar': compressed, avatarChanged: true });
                 };
                 img.src = ev.target.result;
             };
             reader.readAsDataURL(file);
         });
 
-        // ========== КЛИКИ ==========
         function handleClick(x, y) {
             const now = performance.now();
-            
-            // CPS
             clickTimes.push(now);
             clickTimes = clickTimes.filter(t => now - t < 1000);
             const cps = clickTimes.length;
@@ -641,16 +616,13 @@
                 maxCps = cps;
                 update(ref(db, 'users/' + playerName), { maxCps: cps });
             }
-            
             score++;
             totalClicks++;
             countDisplay.innerText = score;
-            
-            const updates = {};
-            updates['users/' + playerName + '/score'] = increment(1);
-            updates['users/' + playerName + '/totalClicks'] = increment(1);
-            update(ref(db), updates);
-            
+            update(ref(db), {
+                [`users/${playerName}/score`]: increment(1),
+                [`users/${playerName}/totalClicks`]: increment(1)
+            });
             createParticle(x, y);
             checkAchievements();
         }
@@ -666,7 +638,6 @@
         }, { passive: false });
         clickBtn.addEventListener('contextmenu', e => e.preventDefault());
 
-        // ========== ЛИДЕРБОРД ==========
         const lb = document.getElementById('leaderboard');
         document.getElementById('leader-header').addEventListener('click', (e) => {
             e.stopPropagation();
@@ -677,13 +648,8 @@
             const data = snap.val();
             if (!data) { leaderList.innerHTML = '<div class="entry">Пусто</div>'; return; }
             const sorted = Object.entries(data)
-                .map(([n, v]) => ({ 
-                    name: n, 
-                    score: v.score || 0, 
-                    hasCrown: v.hasCrown || false 
-                }))
+                .map(([n, v]) => ({ name: n, score: v.score || 0, hasCrown: v.hasCrown || false }))
                 .sort((a, b) => b.score - a.score);
-            
             leaderList.innerHTML = sorted.map(u => {
                 const displayName = u.hasCrown ? `👑 ${escapeHTML(u.name)}` : escapeHTML(u.name);
                 const nameStyle = u.hasCrown ? 'style="color: #FFD700; font-weight: bold;"' : '';
@@ -695,7 +661,6 @@
             return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
         }
 
-        // ========== ЧАСТИЦЫ ==========
         function createParticle(x, y) {
             const p = document.createElement('img');
             p.src = 'https://abrakadabra.fun/uploads/posts/2021-12/1640762606_1-abrakadabra-fun-p-monetka-na-prozrachnom-fone-1.png';
