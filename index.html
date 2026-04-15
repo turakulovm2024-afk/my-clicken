@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Мировой Кликер 👑✨</title>
+    <title>миха миха</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
@@ -11,7 +11,7 @@
             background: radial-gradient(circle at 20% 30%, #34495e, #1a252f);
             font-family: 'Segoe UI', Roboto, sans-serif;
             overflow-x: hidden; position: relative;
-            padding-bottom: 80px;
+            padding-bottom: 90px; /* увеличено под высокую панель */
         }
         #app { flex: 1; display: flex; flex-direction: column; }
 
@@ -41,7 +41,7 @@
         }
         #click-button:active { transform: scale(0.92); box-shadow: 0 6px 0 #b85e00, 0 12px 20px rgba(0,0,0,0.3); }
 
-        /* Скины (базовые + новые) */
+        /* Скины */
         .skin-green { background: radial-gradient(circle at 30% 30%, #2ecc71, #27ae60) !important; box-shadow: 0 12px 0 #1e8449, 0 0 20px #2ecc71 !important; animation: glowPulse 2s infinite !important; }
         .skin-blue { background: radial-gradient(circle at 30% 30%, #3498db, #2980b9) !important; box-shadow: 0 12px 0 #1f618d, 0 0 20px #3498db !important; animation: glowPulse 2s infinite !important; }
         .skin-purple { background: radial-gradient(circle at 30% 30%, #9b59b6, #8e44ad) !important; box-shadow: 0 12px 0 #6c3483, 0 0 20px #9b59b6 !important; animation: glowPulse 2s infinite !important; }
@@ -51,31 +51,16 @@
         .skin-rainbow { background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet) !important; box-shadow: 0 12px 0 #6c3483, 0 0 30px gold !important; animation: glowPulse 2s infinite !important; }
         .skin-social { background: radial-gradient(circle at 30% 30%, #1abc9c, #16a085) !important; box-shadow: 0 12px 0 #117a65, 0 0 20px #1abc9c !important; animation: glowPulse 2s infinite !important; }
         .skin-silver { background: radial-gradient(circle at 30% 30%, #bdc3c7, #95a5a6) !important; box-shadow: 0 12px 0 #7f8c8d, 0 0 20px #bdc3c7 !important; animation: glowPulse 2s infinite !important; }
-        
-        /* Новые скины */
-        .skin-fire { 
-            background: radial-gradient(circle at 30% 30%, #ff6600, #cc3300) !important; 
-            box-shadow: 0 12px 0 #993300, 0 0 30px #ff6600 !important; 
-            animation: firePulse 1.5s infinite !important;
-        }
-        .skin-diamond {
-            background: radial-gradient(circle at 30% 30%, #b0e0e6, #87ceeb, #4682b4) !important;
-            box-shadow: 0 12px 0 #2c3e50, 0 0 40px #00ffff !important;
-            animation: diamondShine 2s infinite !important;
-        }
+        .skin-fire { background: radial-gradient(circle at 30% 30%, #ff6600, #cc3300) !important; box-shadow: 0 12px 0 #993300, 0 0 30px #ff6600 !important; animation: firePulse 1.5s infinite !important; }
+        .skin-diamond { background: radial-gradient(circle at 30% 30%, #b0e0e6, #87ceeb, #4682b4) !important; box-shadow: 0 12px 0 #2c3e50, 0 0 40px #00ffff !important; animation: diamondShine 2s infinite !important; }
         .skin-cosmic {
-            background: radial-gradient(circle at 30% 30%, #2b0040, #0d001a) !important;
+            background: radial-gradient(circle at 20% 40%, #4a0e6b, #0d001a) !important;
             background-image: radial-gradient(circle at 20% 40%, #4a0e6b, #0d001a), repeating-radial-gradient(circle at 50% 50%, #fff 0%, #fff 2px, transparent 3px) !important;
             background-blend-mode: overlay;
             box-shadow: 0 12px 0 #3a0a5e, 0 0 50px #9b59b6 !important;
             animation: cosmicFloat 3s infinite !important;
         }
-        .skin-emerald {
-            background: radial-gradient(circle at 30% 30%, #2ecc71, #27ae60, #1e8449) !important;
-            box-shadow: 0 12px 0 #145a32, 0 0 30px #2ecc71 !important;
-            animation: glowPulse 2s infinite !important;
-            border: 2px solid #a3e4d7 !important;
-        }
+        .skin-emerald { background: radial-gradient(circle at 30% 30%, #2ecc71, #27ae60, #1e8449) !important; box-shadow: 0 12px 0 #145a32, 0 0 30px #2ecc71 !important; animation: glowPulse 2s infinite !important; border: 2px solid #a3e4d7 !important; }
         .skin-neon {
             background: #1a1a2e !important;
             background-image: linear-gradient(45deg, #00ffff, #ff00ff, #00ffff) !important;
@@ -156,24 +141,25 @@
         .skin-item.locked { opacity: 0.5; cursor: not-allowed; }
         .skin-preview { width: 50px; height: 50px; border-radius: 50%; margin: 0 auto 5px; background: radial-gradient(circle at 30% 30%, #ffe066, #f39c12); }
 
-        /* Нижняя панель */
+        /* Нижняя панель (ВЫШЕ) */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0;
             background: rgba(10, 15, 25, 0.95); backdrop-filter: blur(8px);
-            display: flex; justify-content: space-around; padding: 5px 2px;
+            display: flex; justify-content: space-around; padding: 10px 5px;
             border-top: 1px solid rgba(255,215,0,0.3);
             z-index: 50;
             overflow-x: auto;
         }
         .nav-btn {
-            background: none; border: none; color: #aaa; font-size: 11px;
+            background: none; border: none; color: #aaa; font-size: 12px;
             display: flex; flex-direction: column; align-items: center;
-            cursor: pointer; transition: 0.2s; padding: 5px 3px;
-            min-width: 55px;
+            cursor: pointer; transition: 0.2s; padding: 6px 4px;
+            min-width: 65px;
         }
         .nav-btn.active { color: #f1c40f; }
-        .nav-btn span { font-size: 20px; margin-bottom: 2px; }
+        .nav-btn span { font-size: 24px; margin-bottom: 4px; }
 
+        /* Частицы */
         .particle {
             position: fixed; pointer-events: none; width: 50px; height: 50px;
             z-index: 100; animation: fly 0.6s ease-out forwards;
@@ -204,7 +190,7 @@
         <!-- Главная -->
         <div id="home-screen" class="screen active">
             <div id="score-board"><span id="count">0</span></div>
-            <button id="click-button">КЛИК!</button>
+            <button id="click-button"></button>
         </div>
 
         <!-- Лидеры -->
@@ -250,7 +236,7 @@
         </div>
     </div>
 
-    <!-- Нижняя панель -->
+    <!-- Нижняя панель (высокая) -->
     <div class="bottom-nav">
         <button class="nav-btn active" data-screen="home"><span>🏠</span>Главная</button>
         <button class="nav-btn" data-screen="shop"><span>🛒</span>Магазин</button>
