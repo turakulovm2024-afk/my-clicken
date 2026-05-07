@@ -156,7 +156,7 @@
     </script>
     <script type="module">
         import { initializeApp } from "firebase/app";
-        import { getDatabase, ref, onValue, set, update, push, remove, get, increment } from "firebase/database";
+        import { getDatabase, ref, onValue, set, update, push, remove, get, increment, serverTimestamp } from "firebase/database";
 
         const firebaseConfig = { databaseURL: "https://mygame-b11bf-default-rtdb.firebaseio.com/" };
         const app = initializeApp(firebaseConfig);
@@ -185,7 +185,7 @@
             if (myOnlineRef) remove(myOnlineRef);
             const onlineData = {
                 status: 'online',
-                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                timestamp: serverTimestamp(),
                 avatar: avatarUrl || '',
                 nick: nick || playerName
             };
@@ -196,18 +196,15 @@
         // Следим за профилем — все изменения (статистика, аватар) приходят сюда
         onValue(ref(db, 'users/' + playerName), (snap) => {
             const data = snap.val() || {};
-            // Статистика
             homeWinsEl.textContent = data.duelsWon || 0;
             homeLossesEl.textContent = data.duelsLost || 0;
             homeRatingEl.textContent = data.rating || 0;
 
-            // Аватар
             const avatar = data.avatar || '';
             if (avatar !== myAvatar) {
                 myAvatar = avatar;
                 avatarPreview.src = avatar || '';
             }
-            // При любом изменении профиля обновляем онлайн (аватар мог измениться)
             updateOnline(myAvatar, playerName);
         });
 
@@ -239,7 +236,7 @@
         window.challenge = function(target) {
             set(ref(db, 'challenges/' + target), {
                 from: playerName,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
+                timestamp: serverTimestamp()
             });
             showToast('Вызов отправлен!');
         };
@@ -268,7 +265,7 @@
             set(duelRef, {
                 players: [currentChallenge, playerName],
                 state: 'countdown',
-                startTime: firebase.database.ServerValue.TIMESTAMP,
+                startTime: serverTimestamp(),
                 shots: {}
             });
             remove(ref(db, 'challenges/' + playerName));
@@ -357,7 +354,7 @@
                 player1: data.players[0],
                 player2: data.players[1],
                 winner: winner || 'draw',
-                timestamp: firebase.database.ServerValue.TIMESTAMP
+                timestamp: serverTimestamp()
             });
 
             setTimeout(() => {
@@ -400,7 +397,6 @@
 
             playerName = newName;
             localStorage.setItem('duelName', playerName);
-            // После смены ника onValue сам подхватит новый профиль и обновит онлайн
             showToast('Ник изменён!');
         };
 
@@ -418,7 +414,6 @@
                     canvas.width = canvas.height = size;
                     ctx.drawImage(img, 0, 0, size, size);
                     const compressed = canvas.toDataURL('image/jpeg', 0.7);
-                    // Обновляем аватар в профиле — onValue тут же подхватит и обновит UI + онлайн
                     await update(ref(db, 'users/' + playerName), { avatar: compressed });
                     showToast('Аватар обновлён!');
                 };
@@ -465,7 +460,6 @@
 
         function escapeHTML(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]); }
 
-        // При закрытии убираем онлайн
         window.addEventListener('beforeunload', () => {
             remove(ref(db, 'online/' + playerName));
         });
