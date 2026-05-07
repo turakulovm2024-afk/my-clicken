@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>⚔️ Дуэль – Револьвер (Fix)</title>
+    <title>⚔️ Дуэль – Револьвер (Финал)</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
@@ -174,7 +174,7 @@
         let countdownTimer = null;
         let shotSent = false;
         let myAvatar = '';
-        let challengeTimer = null; // таймер для принятия вызова
+        let challengeTimer = null;
 
         const homeWinsEl = document.getElementById('home-wins');
         const homeLossesEl = document.getElementById('home-losses');
@@ -182,7 +182,6 @@
         const currentNickEl = document.getElementById('current-nick');
         const avatarPreview = document.getElementById('avatar-preview');
 
-        // ========== ОНЛАЙН ==========
         function updateOnline(avatarUrl, nick) {
             if (myOnlineRef) remove(myOnlineRef);
             const onlineData = {
@@ -195,7 +194,6 @@
             set(myOnlineRef, onlineData);
         }
 
-        // Слушаем профиль
         onValue(ref(db, 'users/' + playerName), (snap) => {
             const data = snap.val() || {};
             homeWinsEl.textContent = data.duelsWon || 0;
@@ -209,10 +207,8 @@
             updateOnline(myAvatar, playerName);
         });
 
-        // Первоначальная установка онлайна
         updateOnline(myAvatar, playerName);
 
-        // Очистка старых онлайн записей (старше 30 секунд) при обновлении списка
         async function refreshOnline() {
             const listEl = document.getElementById('online-list');
             listEl.innerHTML = 'Загрузка...';
@@ -220,7 +216,6 @@
             const data = snap.val() || {};
             const now = Date.now();
             const players = Object.entries(data).filter(([name, info]) => {
-                // Удаляем записи старше 30 секунд
                 if (info.timestamp && now - info.timestamp > 30000) {
                     remove(ref(db, 'online/' + name));
                     return false;
@@ -243,10 +238,8 @@
             }).join('');
         }
 
-        // ========== ВЫЗОВЫ ==========
         window.challenge = function(target) {
-            const challengeRef = ref(db, 'challenges/' + target);
-            set(challengeRef, {
+            set(ref(db, 'challenges/' + target), {
                 from: playerName,
                 timestamp: serverTimestamp()
             });
@@ -258,7 +251,6 @@
         const challengerNameEl = document.getElementById('challenger-name');
         const challengeCountdownEl = document.getElementById('challenge-countdown');
 
-        // Обработчик входящих вызовов
         const myChallengeRef = ref(db, 'challenges/' + playerName);
         onValue(myChallengeRef, (snap) => {
             const data = snap.val();
@@ -266,7 +258,6 @@
                 currentChallenge = data.from;
                 challengerNameEl.textContent = data.from;
                 challengeAlert.style.display = 'block';
-                // Запускаем таймер 15 секунд на принятие
                 let timeLeft = 15;
                 challengeCountdownEl.textContent = timeLeft;
                 clearInterval(challengeTimer);
@@ -275,7 +266,7 @@
                     challengeCountdownEl.textContent = timeLeft;
                     if (timeLeft <= 0) {
                         clearInterval(challengeTimer);
-                        declineChallenge(); // автоматически отклонить, если не приняли
+                        declineChallenge();
                     }
                 }, 1000);
             } else {
@@ -289,18 +280,17 @@
             if (!currentChallenge) return;
             clearInterval(challengeTimer);
             const opponent = currentChallenge;
-            // Создаём дуэль
             const duelRef = push(ref(db, 'activeDuels'));
             const duelId = duelRef.key;
             set(duelRef, {
                 players: [opponent, playerName],
                 state: 'countdown',
                 startTime: serverTimestamp(),
-                shots: {}
+                shots: {},
+                winner: null,
+                duelId: duelId
             });
-            // Удаляем вызов
             remove(ref(db, 'challenges/' + playerName));
-            // Оба игрока перейдут в дуэль через глобальный слушатель activeDuels
         };
 
         window.declineChallenge = function() {
@@ -310,41 +300,70 @@
             currentChallenge = null;
         };
 
-        // ========== ГЛОБАЛЬНЫЙ СЛУШАТЕЛЬ АКТИВНЫХ ДУЭЛЕЙ ==========
+        // Глобальный слушатель activeDuels
         onValue(ref(db, 'activeDuels'), (snap) => {
             const data = snap.val() || {};
-            // Проверяем, есть ли дуэль с участием нашего игрока
             for (const [duelId, duel] of Object.entries(data)) {
                 if (duel.players && duel.players.includes(playerName) && !currentDuelId) {
-                    // Присоединяемся к этой дуэли
                     currentDuelId = duelId;
-                    setupDuelListener(duelId);
+                    setupDuelListener(duelId, duel);
                     switchScreen('duel');
                     break;
                 }
             }
         });
 
-        // ========== ДУЭЛЬ ==========
-        function setupDuelListener(duelId) {
-            document.getElementById('countdown').textContent = '';
-            document.getElementById('duel-status').textContent = '';
-            document.getElementById('revolver').style.display = 'flex';
+        function setupDuelListener(duelId, initialData) {
+            const countdownEl = document.getElementById('countdown');
+            const statusEl = document.getElementById('duel-status');
+            const revolverBtn = document.getElementById('revolver');
+
             shotSent = false;
+            revolverBtn.style.display = 'none';
+            countdownEl.textContent = '';
+            statusEl.textContent = '';
 
             const duelRef = ref(db, 'activeDuels/' + duelId);
+            
+            // Слушатель изменений дуэли
             onValue(duelRef, (snap) => {
                 const data = snap.val();
                 if (!data) {
-                    // Дуэль удалена
+                    // дуэль удалена
                     currentDuelId = null;
                     switchScreen('home');
                     return;
                 }
+                
                 if (data.state === 'countdown') {
                     startCountdown(duelRef);
+                } else if (data.state === 'shoot') {
+                    // показываем кнопку (если еще не выстрелил)
+                    if (!shotSent) {
+                        revolverBtn.style.display = 'flex';
+                    }
+                    statusEl.textContent = '';
+                    countdownEl.textContent = '';
                 } else if (data.state === 'finished') {
-                    processResult(data);
+                    processResult(data, duelId);
+                }
+            });
+
+            // Отдельный слушатель для shots, чтобы определить конец дуэли
+            const shotsRef = ref(db, `activeDuels/${duelId}/shots`);
+            onValue(shotsRef, (shotsSnap) => {
+                const shots = shotsSnap.val() || {};
+                const entries = Object.entries(shots);
+                if (entries.length === 2) {
+                    // Оба выстрелили, определяем победителя
+                    const [p1, t1] = entries[0];
+                    const [p2, t2] = entries[1];
+                    const winner = t1.timestamp < t2.timestamp ? p1 : p2;
+                    // Обновляем состояние дуэли
+                    update(duelRef, { state: 'finished', winner: winner });
+                } else if (entries.length === 1 && initialData.state !== 'finished') {
+                    // Возможно, один игрок вышел, засчитываем победу оставшемуся? 
+                    // Оставим пока без изменений, победитель определится если оба выстрелили.
                 }
             });
         }
@@ -372,31 +391,31 @@
         window.shoot = function() {
             if (!currentDuelId || shotSent) return;
             shotSent = true;
-            set(ref(db, `activeDuels/${currentDuelId}/shots/${playerName}`), { timestamp: Date.now() });
+            const shotRef = ref(db, `activeDuels/${currentDuelId}/shots/${playerName}`);
+            set(shotRef, { timestamp: Date.now() });
             document.getElementById('revolver').style.display = 'none';
             document.getElementById('duel-status').textContent = 'Выстрел сделан!';
         };
 
-        function processResult(data) {
+        function processResult(data, duelId) {
             clearInterval(countdownTimer);
-            const shots = data.shots || {};
-            const entries = Object.entries(shots);
-            let winner = null;
-            if (entries.length === 2) {
-                const [p1, t1] = entries[0];
-                const [p2, t2] = entries[1];
-                winner = t1.timestamp < t2.timestamp ? p1 : p2;
-            } else if (entries.length === 1) {
-                winner = entries[0][0];
+            const winner = data.winner;
+            let resultText;
+            if (winner === playerName) {
+                resultText = '🏆 Ты победил!';
+            } else if (winner && winner !== playerName) {
+                resultText = '😞 Ты проиграл...';
+            } else {
+                resultText = '🤝 Ничья';
             }
-            const resultText = winner === playerName ? '🏆 Ты победил!' : (winner ? '😞 Ты проиграл...' : '🤝 Ничья');
             document.getElementById('duel-status').textContent = resultText;
             document.getElementById('revolver').style.display = 'none';
+            document.getElementById('countdown').textContent = '';
 
             const userRef = ref(db, 'users/' + playerName);
             if (winner === playerName) {
                 update(userRef, { duelsWon: increment(1), rating: increment(10) });
-            } else if (winner) {
+            } else if (winner && winner !== playerName) {
                 update(userRef, { duelsLost: increment(1), rating: increment(-5) });
             }
 
@@ -407,19 +426,16 @@
                 timestamp: serverTimestamp()
             });
 
-            // Удаляем дуэль через 3 секунды, экран переключится на главную
+            // Удаляем дуэль и возвращаемся на главную
             setTimeout(() => {
-                if (currentDuelId === data.duelId) {
-                    remove(ref(db, 'activeDuels/' + data.duelId));
-                    currentDuelId = null;
-                }
+                remove(ref(db, 'activeDuels/' + duelId));
+                currentDuelId = null;
                 switchScreen('home');
             }, 3000);
         }
 
         window.leaveDuel = function() {
             if (currentDuelId) {
-                // Засчитываем поражение тому, кто вышел
                 set(ref(db, `activeDuels/${currentDuelId}/shots/${playerName}`), { timestamp: Date.now() + 10000 });
                 remove(ref(db, 'activeDuels/' + currentDuelId));
                 currentDuelId = null;
@@ -428,7 +444,7 @@
             switchScreen('home');
         };
 
-        // ========== ПРОФИЛЬ ==========
+        // Профиль и остальное без изменений
         window.changeNickname = async function() {
             const newName = prompt("Новый ник:", playerName);
             if (!newName || newName === playerName) return;
@@ -473,7 +489,6 @@
             reader.readAsDataURL(file);
         });
 
-        // История
         onValue(ref(db, 'duelHistory'), (snap) => {
             const data = snap.val() || {};
             const entries = Object.values(data).sort((a,b) => b.timestamp - a.timestamp).slice(0, 10);
@@ -489,7 +504,6 @@
             `).join('');
         });
 
-        // Навигация
         function switchScreen(screen) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screen + '-screen').classList.add('active');
@@ -513,11 +527,9 @@
             return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
         }
 
-        // При выходе удаляем онлайн
         window.addEventListener('beforeunload', () => {
             remove(ref(db, 'online/' + playerName));
         });
-        // Периодически обновляем онлайн (каждые 20 секунд)
         setInterval(() => updateOnline(myAvatar, playerName), 20000);
     </script>
 </body>
