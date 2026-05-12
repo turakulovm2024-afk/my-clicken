@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>⚔️ Дуэль – Револьвер (Финал)</title>
+    <title>⚔️ Дуэль – Револьвер (Полная версия)</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
@@ -28,7 +28,7 @@
             background: rgba(255,255,255,0.1); border-radius: 15px;
             padding: 12px; margin: 8px 0;
         }
-        .player-info { display: flex; align-items: center; gap: 12px; }
+        .player-info { display: flex; align-items: center; gap: 12px; cursor: pointer; }
         .player-avatar {
             width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
             border: 2px solid #f1c40f; background: #2c3e50;
@@ -52,10 +52,29 @@
 
         .stat-card { background: #2c3e50; border-radius: 15px; padding: 15px; margin-bottom: 10px; }
         .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
-        #avatar-preview {
-            width: 100px; height: 100px; border-radius: 50%; object-fit: cover;
+        #avatar-preview, #player-avatar-large {
+            width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
             border: 3px solid #f1c40f; margin: 10px auto; display: block;
             background: #2c3e50;
+        }
+
+        .leaders-tabs {
+            display: flex; gap: 10px; margin-bottom: 20px;
+        }
+        .leaders-tab {
+            flex: 1; padding: 10px; background: #2c3e50; color: white;
+            border: none; border-radius: 15px; cursor: pointer; text-align: center;
+            font-weight: bold;
+        }
+        .leaders-tab.active { background: #f1c40f; color: #1a1a2e; }
+
+        .leader-entry {
+            display: flex; align-items: center; gap: 12px;
+            background: #2c3e50; border-radius: 15px; padding: 12px; margin: 8px 0;
+        }
+        .leader-avatar {
+            width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+            border: 2px solid #f1c40f; background: #2c3e50;
         }
 
         .bottom-nav {
@@ -123,6 +142,17 @@
             </div>
         </div>
 
+        <!-- Лидеры -->
+        <div id="leaders-screen" class="screen">
+            <h2>🏆 Лидеры</h2>
+            <div class="leaders-tabs">
+                <button class="leaders-tab active" data-leader="rating">Рейтинг</button>
+                <button class="leaders-tab" data-leader="wins">Победы</button>
+                <button class="leaders-tab" data-leader="losses">Поражения</button>
+            </div>
+            <div id="leaders-list"></div>
+        </div>
+
         <!-- Активная дуэль -->
         <div id="duel-screen" class="screen">
             <div class="duel-container">
@@ -134,7 +164,7 @@
             </div>
         </div>
 
-        <!-- Профиль -->
+        <!-- Профиль (свой) -->
         <div id="profile-screen" class="screen">
             <h2>👤 Профиль</h2>
             <img id="avatar-preview" src="" alt="Аватар">
@@ -143,11 +173,25 @@
             <button class="btn-gold" onclick="changeNickname()">✏️ Сменить ник</button>
             <p>Текущий ник: <b id="current-nick"></b></p>
         </div>
+
+        <!-- Чужой профиль -->
+        <div id="player-profile-screen" class="screen">
+            <h2 id="player-profile-title">👤 Игрок</h2>
+            <img id="player-avatar-large" src="" alt="Аватар">
+            <div class="stat-card">
+                <div class="stat-row"><span>Побед:</span> <span id="player-wins">0</span></div>
+                <div class="stat-row"><span>Поражений:</span> <span id="player-losses">0</span></div>
+                <div class="stat-row"><span>Рейтинг:</span> <span id="player-rating">0</span></div>
+                <div class="stat-row"><span>Был в сети:</span> <span id="player-last-seen">-</span></div>
+            </div>
+            <button onclick="switchScreen('lobby')">Назад</button>
+        </div>
     </div>
 
     <div class="bottom-nav">
         <button class="nav-btn active" data-screen="home"><span>🏠</span>Главная</button>
         <button class="nav-btn" data-screen="lobby"><span>⚔️</span>Лобби</button>
+        <button class="nav-btn" data-screen="leaders"><span>🏆</span>Лидеры</button>
         <button class="nav-btn" data-screen="profile"><span>👤</span>Профиль</button>
     </div>
     <div id="toast"></div>
@@ -157,7 +201,7 @@
     </script>
     <script type="module">
         import { initializeApp } from "firebase/app";
-        import { getDatabase, ref, onValue, set, update, push, remove, get, increment, serverTimestamp } from "firebase/database";
+        import { getDatabase, ref, onValue, set, update, push, remove, get, increment, serverTimestamp, onDisconnect } from "firebase/database";
 
         const firebaseConfig = { databaseURL: "https://mygame-b11bf-default-rtdb.firebaseio.com/" };
         const app = initializeApp(firebaseConfig);
@@ -172,9 +216,12 @@
         let myOnlineRef;
         let currentDuelId = null;
         let countdownTimer = null;
+        let shootTimer = null; // таймер для автозавершения дуэли
         let shotSent = false;
         let myAvatar = '';
         let challengeTimer = null;
+        let hasIncomingChallenge = false;
+        let processedDuels = new Set(); // отслеживание обработанных дуэлей
 
         const homeWinsEl = document.getElementById('home-wins');
         const homeLossesEl = document.getElementById('home-losses');
@@ -182,18 +229,29 @@
         const currentNickEl = document.getElementById('current-nick');
         const avatarPreview = document.getElementById('avatar-preview');
 
+        // ========== ОНЛАЙН ==========
         function updateOnline(avatarUrl, nick) {
-            if (myOnlineRef) remove(myOnlineRef);
-            const onlineData = {
+            if (myOnlineRef) {
+                update(myOnlineRef, {
+                    status: 'online',
+                    timestamp: serverTimestamp(),
+                    avatar: avatarUrl || '',
+                    nick: nick || playerName
+                });
+                return;
+            }
+            const onlineRef = ref(db, 'online/' + playerName);
+            set(onlineRef, {
                 status: 'online',
                 timestamp: serverTimestamp(),
                 avatar: avatarUrl || '',
                 nick: nick || playerName
-            };
-            myOnlineRef = ref(db, 'online/' + playerName);
-            set(myOnlineRef, onlineData);
+            });
+            myOnlineRef = onlineRef;
+            onDisconnect(onlineRef).remove();
         }
 
+        // Следим за своим профилем
         onValue(ref(db, 'users/' + playerName), (snap) => {
             const data = snap.val() || {};
             homeWinsEl.textContent = data.duelsWon || 0;
@@ -208,7 +266,9 @@
         });
 
         updateOnline(myAvatar, playerName);
+        setInterval(() => updateOnline(myAvatar, playerName), 15000);
 
+        // ========== ЛОББИ И ВЫЗОВЫ ==========
         async function refreshOnline() {
             const listEl = document.getElementById('online-list');
             listEl.innerHTML = 'Загрузка...';
@@ -216,7 +276,7 @@
             const data = snap.val() || {};
             const now = Date.now();
             const players = Object.entries(data).filter(([name, info]) => {
-                if (info.timestamp && now - info.timestamp > 30000) {
+                if (info.timestamp && now - info.timestamp > 45000) {
                     remove(ref(db, 'online/' + name));
                     return false;
                 }
@@ -232,13 +292,52 @@
                     : '<div class="player-avatar" style="display:flex;align-items:center;justify-content:center;font-size:20px;">👤</div>';
                 return `
                 <div class="online-item">
-                    <div class="player-info">${avatarImg}<span>${escapeHTML(name)}</span></div>
-                    <button class="btn-gold btn-small" onclick="challenge('${escapeHTML(name)}')">Дуэль</button>
+                    <div class="player-info" onclick="viewProfile('${escapeHTML(name)}')">
+                        ${avatarImg}
+                        <span>${escapeHTML(name)}</span>
+                    </div>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn-gold btn-small" onclick="challenge('${escapeHTML(name)}')">⚔️</button>
+                        <button class="btn-purple btn-small" onclick="viewProfile('${escapeHTML(name)}')">👤</button>
+                    </div>
                 </div>`;
             }).join('');
         }
 
-        window.challenge = function(target) {
+        window.viewProfile = async function(targetName) {
+            const snap = await get(ref(db, 'users/' + targetName));
+            const data = snap.val() || {};
+            const onlineSnap = await get(ref(db, 'online/' + targetName));
+            const onlineData = onlineSnap.val() || {};
+
+            document.getElementById('player-profile-title').textContent = `👤 ${targetName}`;
+            document.getElementById('player-avatar-large').src = data.avatar || '';
+            document.getElementById('player-wins').textContent = data.duelsWon || 0;
+            document.getElementById('player-losses').textContent = data.duelsLost || 0;
+            document.getElementById('player-rating').textContent = data.rating || 0;
+
+            let lastSeenText = 'сейчас';
+            if (onlineData.timestamp) {
+                const diff = Date.now() - onlineData.timestamp;
+                const minutes = Math.floor(diff / 60000);
+                if (minutes < 1) lastSeenText = 'только что';
+                else if (minutes < 60) lastSeenText = `${minutes} мин. назад`;
+                else lastSeenText = 'давно';
+            } else {
+                lastSeenText = 'неизвестно';
+            }
+            document.getElementById('player-last-seen').textContent = lastSeenText;
+
+            switchScreen('player-profile');
+        };
+
+        window.challenge = async function(target) {
+            // Проверяем, нет ли у цели уже активного входящего вызова
+            const existingSnap = await get(ref(db, 'challenges/' + target));
+            if (existingSnap.exists()) {
+                showToast('Игрок уже занят другим вызовом');
+                return;
+            }
             set(ref(db, 'challenges/' + target), {
                 from: playerName,
                 timestamp: serverTimestamp()
@@ -246,16 +345,16 @@
             showToast('Вызов отправлен!');
         };
 
-        let currentChallenge = null;
-        const challengeAlert = document.getElementById('challenge-alert');
-        const challengerNameEl = document.getElementById('challenger-name');
-        const challengeCountdownEl = document.getElementById('challenge-countdown');
-
+        // Обработка входящих вызовов
         const myChallengeRef = ref(db, 'challenges/' + playerName);
         onValue(myChallengeRef, (snap) => {
             const data = snap.val();
+            const challengeAlert = document.getElementById('challenge-alert');
+            const challengerNameEl = document.getElementById('challenger-name');
+            const challengeCountdownEl = document.getElementById('challenge-countdown');
+
             if (data && data.from) {
-                currentChallenge = data.from;
+                hasIncomingChallenge = true;
                 challengerNameEl.textContent = data.from;
                 challengeAlert.style.display = 'block';
                 let timeLeft = 15;
@@ -270,16 +369,16 @@
                     }
                 }, 1000);
             } else {
-                currentChallenge = null;
+                hasIncomingChallenge = false;
                 challengeAlert.style.display = 'none';
                 clearInterval(challengeTimer);
             }
         });
 
         window.acceptChallenge = function() {
-            if (!currentChallenge) return;
+            if (!hasIncomingChallenge) return;
             clearInterval(challengeTimer);
-            const opponent = currentChallenge;
+            const opponent = document.getElementById('challenger-name').textContent;
             const duelRef = push(ref(db, 'activeDuels'));
             const duelId = duelRef.key;
             set(duelRef, {
@@ -288,19 +387,22 @@
                 startTime: serverTimestamp(),
                 shots: {},
                 winner: null,
+                processed: false,
                 duelId: duelId
             });
-            remove(ref(db, 'challenges/' + playerName));
+            remove(myChallengeRef);
+            hasIncomingChallenge = false;
+            document.getElementById('challenge-alert').style.display = 'none';
         };
 
         window.declineChallenge = function() {
             clearInterval(challengeTimer);
-            remove(ref(db, 'challenges/' + playerName));
-            challengeAlert.style.display = 'none';
-            currentChallenge = null;
+            remove(myChallengeRef);
+            document.getElementById('challenge-alert').style.display = 'none';
+            hasIncomingChallenge = false;
         };
 
-        // Глобальный слушатель activeDuels
+        // ========== ГЛОБАЛЬНЫЙ СЛУШАТЕЛЬ АКТИВНЫХ ДУЭЛЕЙ ==========
         onValue(ref(db, 'activeDuels'), (snap) => {
             const data = snap.val() || {};
             for (const [duelId, duel] of Object.entries(data)) {
@@ -313,6 +415,7 @@
             }
         });
 
+        // ========== ДУЭЛЬ ==========
         function setupDuelListener(duelId, initialData) {
             const countdownEl = document.getElementById('countdown');
             const statusEl = document.getElementById('duel-status');
@@ -322,48 +425,52 @@
             revolverBtn.style.display = 'none';
             countdownEl.textContent = '';
             statusEl.textContent = '';
+            clearTimeout(shootTimer);
 
             const duelRef = ref(db, 'activeDuels/' + duelId);
-            
-            // Слушатель изменений дуэли
+
             onValue(duelRef, (snap) => {
                 const data = snap.val();
                 if (!data) {
-                    // дуэль удалена
                     currentDuelId = null;
                     switchScreen('home');
                     return;
                 }
-                
+
                 if (data.state === 'countdown') {
                     startCountdown(duelRef);
                 } else if (data.state === 'shoot') {
-                    // показываем кнопку (если еще не выстрелил)
                     if (!shotSent) {
                         revolverBtn.style.display = 'flex';
                     }
-                    statusEl.textContent = '';
                     countdownEl.textContent = '';
+                    statusEl.textContent = '';
+
+                    // Запускаем таймер автозавершения на 5 секунд
+                    clearTimeout(shootTimer);
+                    shootTimer = setTimeout(() => {
+                        if (currentDuelId === duelId && data.state === 'shoot') {
+                            // Автоматическое завершение: кто не выстрелил - проиграл
+                            autoFinishDuel(duelId, data);
+                        }
+                    }, 5000);
                 } else if (data.state === 'finished') {
+                    clearTimeout(shootTimer);
                     processResult(data, duelId);
                 }
             });
 
-            // Отдельный слушатель для shots, чтобы определить конец дуэли
+            // Отдельный слушатель выстрелов для определения победителя
             const shotsRef = ref(db, `activeDuels/${duelId}/shots`);
             onValue(shotsRef, (shotsSnap) => {
                 const shots = shotsSnap.val() || {};
                 const entries = Object.entries(shots);
-                if (entries.length === 2) {
-                    // Оба выстрелили, определяем победителя
+                if (entries.length === 2 && !initialData.processed) {
+                    // Оба выстрелили - определяем победителя
                     const [p1, t1] = entries[0];
                     const [p2, t2] = entries[1];
                     const winner = t1.timestamp < t2.timestamp ? p1 : p2;
-                    // Обновляем состояние дуэли
-                    update(duelRef, { state: 'finished', winner: winner });
-                } else if (entries.length === 1 && initialData.state !== 'finished') {
-                    // Возможно, один игрок вышел, засчитываем победу оставшемуся? 
-                    // Оставим пока без изменений, победитель определится если оба выстрелили.
+                    update(duelRef, { state: 'finished', winner: winner, processed: true });
                 }
             });
         }
@@ -391,14 +498,26 @@
         window.shoot = function() {
             if (!currentDuelId || shotSent) return;
             shotSent = true;
-            const shotRef = ref(db, `activeDuels/${currentDuelId}/shots/${playerName}`);
-            set(shotRef, { timestamp: Date.now() });
+            set(ref(db, `activeDuels/${currentDuelId}/shots/${playerName}`), { timestamp: Date.now() });
             document.getElementById('revolver').style.display = 'none';
             document.getElementById('duel-status').textContent = 'Выстрел сделан!';
         };
 
+        function autoFinishDuel(duelId, data) {
+            const shots = data.shots || {};
+            const entries = Object.entries(shots);
+            let winner = null;
+            if (entries.length === 1) {
+                winner = entries[0][0]; // кто выстрелил, тот победил
+            } else if (entries.length === 0) {
+                winner = null; // ничья
+            }
+            update(ref(db, `activeDuels/${duelId}`), { state: 'finished', winner: winner, processed: true });
+        }
+
         function processResult(data, duelId) {
             clearInterval(countdownTimer);
+            clearTimeout(shootTimer);
             const winner = data.winner;
             let resultText;
             if (winner === playerName) {
@@ -413,38 +532,81 @@
             document.getElementById('countdown').textContent = '';
 
             const userRef = ref(db, 'users/' + playerName);
-            if (winner === playerName) {
-                update(userRef, { duelsWon: increment(1), rating: increment(10) });
-            } else if (winner && winner !== playerName) {
-                update(userRef, { duelsLost: increment(1), rating: increment(-5) });
+            if (!processedDuels.has(duelId)) {
+                processedDuels.add(duelId);
+                if (winner === playerName) {
+                    update(userRef, { duelsWon: increment(1), rating: increment(10) });
+                } else if (winner && winner !== playerName) {
+                    update(userRef, { duelsLost: increment(1), rating: increment(-5) });
+                }
+                push(ref(db, 'duelHistory'), {
+                    player1: data.players[0],
+                    player2: data.players[1],
+                    winner: winner || 'draw',
+                    timestamp: serverTimestamp()
+                });
             }
 
-            push(ref(db, 'duelHistory'), {
-                player1: data.players[0],
-                player2: data.players[1],
-                winner: winner || 'draw',
-                timestamp: serverTimestamp()
-            });
-
-            // Удаляем дуэль и возвращаемся на главную
             setTimeout(() => {
                 remove(ref(db, 'activeDuels/' + duelId));
-                currentDuelId = null;
+                if (currentDuelId === duelId) currentDuelId = null;
                 switchScreen('home');
             }, 3000);
         }
 
         window.leaveDuel = function() {
             if (currentDuelId) {
+                // Засчитываем поражение вышедшему
                 set(ref(db, `activeDuels/${currentDuelId}/shots/${playerName}`), { timestamp: Date.now() + 10000 });
+                update(ref(db, `activeDuels/${currentDuelId}`), { state: 'finished', winner: null, processed: true });
                 remove(ref(db, 'activeDuels/' + currentDuelId));
                 currentDuelId = null;
             }
             clearInterval(countdownTimer);
+            clearTimeout(shootTimer);
             switchScreen('home');
         };
 
-        // Профиль и остальное без изменений
+        // ========== ЛИДЕРЫ ==========
+        function loadLeaders(sortBy = 'rating') {
+            get(ref(db, 'users')).then(snap => {
+                const users = snap.val() || {};
+                const list = Object.entries(users).map(([name, data]) => ({
+                    name,
+                    ...data
+                }));
+                if (sortBy === 'wins') {
+                    list.sort((a,b) => (b.duelsWon||0) - (a.duelsWon||0));
+                } else if (sortBy === 'losses') {
+                    list.sort((a,b) => (b.duelsLost||0) - (a.duelsLost||0));
+                } else {
+                    list.sort((a,b) => (b.rating||0) - (a.rating||0));
+                }
+                const listEl = document.getElementById('leaders-list');
+                listEl.innerHTML = list.slice(0, 20).map(user => {
+                    const avatarImg = user.avatar
+                        ? `<img src="${user.avatar}" class="leader-avatar" alt="avatar">`
+                        : '<div class="leader-avatar" style="display:flex;align-items:center;justify-content:center;font-size:20px;">👤</div>';
+                    return `
+                    <div class="leader-entry">
+                        ${avatarImg}
+                        <span style="flex:1">${escapeHTML(user.name)}</span>
+                        <span>🏆 ${user.rating || 0} | ⚔️ ${user.duelsWon || 0} | 💔 ${user.duelsLost || 0}</span>
+                    </div>`;
+                }).join('');
+            });
+        }
+
+        // Переключение вкладок лидеров
+        document.querySelectorAll('.leaders-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.leaders-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                loadLeaders(tab.dataset.leader);
+            });
+        });
+
+        // ========== ПРОФИЛЬ ==========
         window.changeNickname = async function() {
             const newName = prompt("Новый ник:", playerName);
             if (!newName || newName === playerName) return;
@@ -489,6 +651,7 @@
             reader.readAsDataURL(file);
         });
 
+        // История дуэлей
         onValue(ref(db, 'duelHistory'), (snap) => {
             const data = snap.val() || {};
             const entries = Object.values(data).sort((a,b) => b.timestamp - a.timestamp).slice(0, 10);
@@ -504,6 +667,7 @@
             `).join('');
         });
 
+        // ========== НАВИГАЦИЯ ==========
         function switchScreen(screen) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screen + '-screen').classList.add('active');
@@ -511,6 +675,7 @@
             const btn = document.querySelector(`.nav-btn[data-screen="${screen}"]`);
             if (btn) btn.classList.add('active');
             if (screen === 'lobby') refreshOnline();
+            if (screen === 'leaders') loadLeaders();
         }
 
         document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -523,14 +688,12 @@
             setTimeout(() => t.style.display = 'none', 2500);
         }
 
-        function escapeHTML(s) {
-            return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
-        }
+        function escapeHTML(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]); }
 
+        // При закрытии вкладки/отключении
         window.addEventListener('beforeunload', () => {
             remove(ref(db, 'online/' + playerName));
         });
-        setInterval(() => updateOnline(myAvatar, playerName), 20000);
     </script>
 </body>
 </html>
