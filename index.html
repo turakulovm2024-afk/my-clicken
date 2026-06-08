@@ -1,699 +1,847 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>⚔️ Дуэль – Револьвер (Полная версия)</title>
-    <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            margin: 0; min-height: 100vh; display: flex; flex-direction: column;
-            background: radial-gradient(circle at 20% 30%, #1a1a2e, #0b0b1a);
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            padding-bottom: 85px; overflow-x: hidden;
-        }
-        #app { flex: 1; display: flex; flex-direction: column; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>🚀 Кликер Профи – Чистая версия</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f0f1a; font-family: 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+      min-height: 100vh; color: white; padding: 20px;
+    }
+    .screen { display: none; width: 100%; max-width: 400px; }
+    .screen.active { display: block; }
 
-        .screen { display: none; flex: 1; padding: 20px; color: white; overflow-y: auto; }
-        .screen.active { display: flex; flex-direction: column; }
+    .btn {
+      background: #2a2a4a; color: white; border: none; border-radius: 16px;
+      padding: 14px 24px; font-size: 18px; cursor: pointer; width: 100%; margin: 6px 0;
+      transition: all 0.2s; font-weight: bold;
+    }
+    .btn:active { transform: scale(0.96); background: #3a3a6a; }
+    .btn-accent { background: #6c5ce7; }
+    .btn-gold { background: #f39c12; color: #111; }
 
-        .lobby-card {
-            background: rgba(44, 62, 80, 0.8); backdrop-filter: blur(5px);
-            border-radius: 20px; padding: 18px; margin-bottom: 15px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .online-list { max-height: 400px; overflow-y: auto; }
-        .online-item {
-            display: flex; align-items: center; justify-content: space-between;
-            background: rgba(255,255,255,0.1); border-radius: 15px;
-            padding: 12px; margin: 8px 0;
-        }
-        .player-info { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-        .player-avatar {
-            width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
-            border: 2px solid #f1c40f; background: #2c3e50;
-        }
-        .challenge-alert {
-            background: #e74c3c; color: white; border-radius: 20px;
-            padding: 15px; margin: 15px 0; display: none;
-        }
-        .challenge-timer { font-weight: bold; color: #f1c40f; }
+    .card {
+      background: #1a1a2e; border-radius: 24px; padding: 20px; margin: 16px 0;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
 
-        .countdown { font-size: 60px; font-weight: bold; text-shadow: 0 0 30px red; }
-        .revolver-btn {
-            width: 200px; height: 200px; border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #c0392b, #922b21);
-            box-shadow: 0 12px 0 #641e16, 0 20px 30px rgba(0,0,0,0.5);
-            cursor: pointer; font-size: 60px; color: white;
-            display: flex; align-items: center; justify-content: center;
-            transition: 0.1s; margin: 20px;
-        }
-        .revolver-btn:active { transform: scale(0.92); box-shadow: 0 6px 0 #641e16; }
+    .clicker {
+      background: #ff9f43; border-radius: 50%;
+      width: 180px; height: 180px; display: flex; align-items: center;
+      justify-content: center; font-size: 40px; margin: 20px auto;
+      box-shadow: 0 10px 0 #d35400, 0 20px 25px rgba(0,0,0,0.5);
+      cursor: pointer; user-select: none; transition: 0.1s;
+      touch-action: manipulation;
+    }
+    .clicker:active { transform: scale(0.92); box-shadow: 0 4px 0 #d35400; }
 
-        .stat-card { background: #2c3e50; border-radius: 15px; padding: 15px; margin-bottom: 10px; }
-        .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
-        #avatar-preview, #player-avatar-large {
-            width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
-            border: 3px solid #f1c40f; margin: 10px auto; display: block;
-            background: #2c3e50;
-        }
+    .stats { display: flex; justify-content: center; }
+    .stat { background: #2a2a4a; border-radius: 16px; padding: 14px; margin: 4px; text-align: center; }
 
-        .leaders-tabs {
-            display: flex; gap: 10px; margin-bottom: 20px;
-        }
-        .leaders-tab {
-            flex: 1; padding: 10px; background: #2c3e50; color: white;
-            border: none; border-radius: 15px; cursor: pointer; text-align: center;
-            font-weight: bold;
-        }
-        .leaders-tab.active { background: #f1c40f; color: #1a1a2e; }
+    .nav {
+      display: flex; justify-content: space-around; background: #12121f;
+      padding: 10px; border-radius: 24px; margin-top: 20px;
+    }
+    .nav-btn { background: none; border: none; color: #aaa; font-size: 16px; cursor: pointer; }
+    .nav-btn.active { color: #ff9f43; font-weight: bold; }
 
-        .leader-entry {
-            display: flex; align-items: center; gap: 12px;
-            background: #2c3e50; border-radius: 15px; padding: 12px; margin: 8px 0;
-        }
-        .leader-avatar {
-            width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
-            border: 2px solid #f1c40f; background: #2c3e50;
-        }
+    .skin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .skin-item { background: #2a2a4a; border-radius: 20px; padding: 14px; text-align: center; cursor: pointer; }
+    .skin-item.active { border: 2px solid #ff9f43; }
+    .skin-preview { width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 8px; background: #ff9f43; }
 
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: rgba(15, 20, 30, 0.95); backdrop-filter: blur(10px);
-            display: flex; justify-content: space-around; padding: 10px 5px;
-            border-top: 1px solid rgba(255,215,0,0.3); z-index: 50;
-        }
-        .nav-btn {
-            background: none; border: none; color: #aaa; font-size: 12px;
-            display: flex; flex-direction: column; align-items: center;
-            cursor: pointer; padding: 6px 4px; min-width: 60px;
-        }
-        .nav-btn.active { color: #f1c40f; }
-        .nav-btn span { font-size: 24px; margin-bottom: 4px; }
-
-        button {
-            cursor: pointer; border: none; border-radius: 20px; padding: 12px 20px;
-            font-size: 16px; font-weight: bold; margin: 5px;
-            background: linear-gradient(45deg, #c0392b, #e74c3c); color: white;
-            transition: 0.2s;
-        }
-        button:active { transform: scale(0.95); }
-        .btn-green { background: linear-gradient(45deg, #2ecc71, #27ae60); }
-        .btn-gold { background: linear-gradient(45deg, #f1c40f, #f39c12); color: #1a1a2e; }
-        .btn-purple { background: linear-gradient(45deg, #9b59b6, #8e44ad); }
-        .btn-small { width: auto; padding: 8px 16px; font-size: 14px; }
-
-        #toast {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background: #000; color: white; padding: 12px 25px;
-            border-radius: 30px; z-index: 300; border: 1px solid gold;
-            display: none;
-        }
-    </style>
+    .coin-game { display: flex; gap: 10px; justify-content: center; }
+    .coin-btn {
+      background: #2a2a4a; border: none; border-radius: 16px; padding: 20px;
+      font-size: 28px; cursor: pointer; color: white;
+    }
+  </style>
 </head>
 <body>
-    <div id="app">
-        <!-- Главная (статистика) -->
-        <div id="home-screen" class="screen active">
-            <h2>📊 Статистика</h2>
-            <div class="stat-card">
-                <div class="stat-row"><span>Побед:</span> <span id="home-wins">0</span></div>
-                <div class="stat-row"><span>Поражений:</span> <span id="home-losses">0</span></div>
-                <div class="stat-row"><span>Рейтинг:</span> <span id="home-rating">0</span></div>
-            </div>
-        </div>
 
-        <!-- Лобби -->
-        <div id="lobby-screen" class="screen">
-            <h2>⚔️ Лобби</h2>
-            <div class="challenge-alert" id="challenge-alert">
-                <span id="challenger-name"></span> вызывает! (<span class="challenge-timer" id="challenge-countdown">15</span>с)
-                <button class="btn-green" onclick="acceptChallenge()">Принять</button>
-                <button onclick="declineChallenge()">Отклонить</button>
-            </div>
-            <div class="lobby-card">
-                <h3>Игроки онлайн</h3>
-                <div class="online-list" id="online-list">Загрузка...</div>
-                <button class="btn-gold btn-small" onclick="refreshOnline()">Обновить</button>
-            </div>
-            <div class="lobby-card">
-                <h3>История дуэлей</h3>
-                <div id="history-list">Пусто</div>
-            </div>
-        </div>
-
-        <!-- Лидеры -->
-        <div id="leaders-screen" class="screen">
-            <h2>🏆 Лидеры</h2>
-            <div class="leaders-tabs">
-                <button class="leaders-tab active" data-leader="rating">Рейтинг</button>
-                <button class="leaders-tab" data-leader="wins">Победы</button>
-                <button class="leaders-tab" data-leader="losses">Поражения</button>
-            </div>
-            <div id="leaders-list"></div>
-        </div>
-
-        <!-- Активная дуэль -->
-        <div id="duel-screen" class="screen">
-            <div class="duel-container">
-                <h2>⚡ Дуэль</h2>
-                <div class="countdown" id="countdown">3</div>
-                <div class="revolver-btn" id="revolver" onclick="shoot()">🔫</div>
-                <p id="duel-status"></p>
-                <button onclick="leaveDuel()">Выйти</button>
-            </div>
-        </div>
-
-        <!-- Профиль (свой) -->
-        <div id="profile-screen" class="screen">
-            <h2>👤 Профиль</h2>
-            <img id="avatar-preview" src="" alt="Аватар">
-            <button class="btn-purple" onclick="document.getElementById('avatar-file').click()">📷 Загрузить фото</button>
-            <input type="file" id="avatar-file" accept="image/*" style="display:none;">
-            <button class="btn-gold" onclick="changeNickname()">✏️ Сменить ник</button>
-            <p>Текущий ник: <b id="current-nick"></b></p>
-        </div>
-
-        <!-- Чужой профиль -->
-        <div id="player-profile-screen" class="screen">
-            <h2 id="player-profile-title">👤 Игрок</h2>
-            <img id="player-avatar-large" src="" alt="Аватар">
-            <div class="stat-card">
-                <div class="stat-row"><span>Побед:</span> <span id="player-wins">0</span></div>
-                <div class="stat-row"><span>Поражений:</span> <span id="player-losses">0</span></div>
-                <div class="stat-row"><span>Рейтинг:</span> <span id="player-rating">0</span></div>
-                <div class="stat-row"><span>Был в сети:</span> <span id="player-last-seen">-</span></div>
-            </div>
-            <button onclick="switchScreen('lobby')">Назад</button>
-        </div>
+<div id="app">
+  <!-- ГЛАВНАЯ -->
+  <div id="home" class="screen active">
+    <div class="card" style="text-align:center;">
+      <h1 id="coinDisplay">0 💰</h1>
+      <p id="perClick">1 за клик</p>
     </div>
-
-    <div class="bottom-nav">
-        <button class="nav-btn active" data-screen="home"><span>🏠</span>Главная</button>
-        <button class="nav-btn" data-screen="lobby"><span>⚔️</span>Лобби</button>
-        <button class="nav-btn" data-screen="leaders"><span>🏆</span>Лидеры</button>
-        <button class="nav-btn" data-screen="profile"><span>👤</span>Профиль</button>
+    <div class="clicker" id="clickBtn">🔥</div>
+    <div class="stats">
+      <div class="stat">Всего кликов<br><b id="totalClicks">0</b></div>
     </div>
-    <div id="toast"></div>
+    <div id="boosts"></div>
+  </div>
 
-    <script type="importmap">
-        { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js", "firebase/database": "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js" } }
-    </script>
-    <script type="module">
-        import { initializeApp } from "firebase/app";
-        import { getDatabase, ref, onValue, set, update, push, remove, get, increment, serverTimestamp, onDisconnect } from "firebase/database";
+  <!-- МАГАЗИН -->
+  <div id="shop" class="screen">
+    <h2>🛒 Магазин</h2>
+    <button class="btn btn-accent" id="buyClickUp">➕ Клик +1 (10 монет)</button>
+    <button class="btn btn-gold" id="buyX2Boost">⚡ x2 Буст (5 мин) - 50</button>
+    <button class="btn" id="buyAutoClick">🤖 Автоклик (10 сек) - 200</button>
+  </div>
 
-        const firebaseConfig = { databaseURL: "https://mygame-b11bf-default-rtdb.firebaseio.com/" };
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+  <!-- МИНИ-ИГРЫ -->
+  <div id="games" class="screen">
+    <h2>🎮 Мини-игры</h2>
+    <div class="card">
+      <h3>🪙 Орёл и решка</h3>
+      <p>Ставка: 10 монет</p>
+      <div class="coin-game">
+        <button class="coin-btn" id="btnHeads">🦅 Орёл</button>
+        <button class="coin-btn" id="btnTails">💰 Решка</button>
+      </div>
+      <p id="coinResult"></p>
+    </div>
+  </div>
 
-        let playerName = localStorage.getItem('duelName');
-        if (!playerName) {
-            playerName = prompt("Введи ник:") || "Стрелок_" + Math.floor(Math.random()*1000);
-            localStorage.setItem('duelName', playerName);
-        }
+  <!-- СКИНЫ -->
+  <div id="skins" class="screen">
+    <h2>🎨 Скины</h2>
+    <div class="skin-grid" id="skinGrid"></div>
+  </div>
 
-        let myOnlineRef;
-        let currentDuelId = null;
-        let countdownTimer = null;
-        let shootTimer = null; // таймер для автозавершения дуэли
-        let shotSent = false;
-        let myAvatar = '';
-        let challengeTimer = null;
-        let hasIncomingChallenge = false;
-        let processedDuels = new Set(); // отслеживание обработанных дуэлей
+  <!-- ПРОФИЛЬ -->
+  <div id="profile" class="screen">
+    <h2>👤 Профиль</h2>
+    <input type="text" id="nickInput" placeholder="Введи ник" style="width:100%; padding:14px; border-radius:16px; border:none; margin:10px 0;">
+    <button class="btn btn-accent" id="saveNick">Сохранить</button>
+    <div class="card">
+      <p>Последний вход: <span id="lastLogin">-</span></p>
+    </div>
+    <button class="btn" id="resetBtn">🔄 Сбросить прогресс</button>
+    <button class="btn" id="deleteInactiveBtn">🧹 Удалить неактивных (>30 дней)</button>
+  </div>
 
-        const homeWinsEl = document.getElementById('home-wins');
-        const homeLossesEl = document.getElementById('home-losses');
-        const homeRatingEl = document.getElementById('home-rating');
-        const currentNickEl = document.getElementById('current-nick');
-        const avatarPreview = document.getElementById('avatar-preview');
+  <!-- НАВИГАЦИЯ -->
+  <div class="nav">
+    <button class="nav-btn active" data-screen="home">🏠</button>
+    <button class="nav-btn" data-screen="shop">🛒</button>
+    <button class="nav-btn" data-screen="games">🎮</button>
+    <button class="nav-btn" data-screen="skins">🎨</button>
+    <button class="nav-btn" data-screen="profile">👤</button>
+  </div>
+</div>
 
-        // ========== ОНЛАЙН ==========
-        function updateOnline(avatarUrl, nick) {
-            if (myOnlineRef) {
-                update(myOnlineRef, {
-                    status: 'online',
-                    timestamp: serverTimestamp(),
-                    avatar: avatarUrl || '',
-                    nick: nick || playerName
-                });
-                return;
-            }
-            const onlineRef = ref(db, 'online/' + playerName);
-            set(onlineRef, {
-                status: 'online',
-                timestamp: serverTimestamp(),
-                avatar: avatarUrl || '',
-                nick: nick || playerName
-            });
-            myOnlineRef = onlineRef;
-            onDisconnect(onlineRef).remove();
-        }
+<script type="importmap">
+  { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js", "firebase/database": "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js" } }
+</script>
+<script type="module">
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, set, onValue, update, get, remove } from "firebase/database";
 
-        // Следим за своим профилем
-        onValue(ref(db, 'users/' + playerName), (snap) => {
-            const data = snap.val() || {};
-            homeWinsEl.textContent = data.duelsWon || 0;
-            homeLossesEl.textContent = data.duelsLost || 0;
-            homeRatingEl.textContent = data.rating || 0;
-            const avatar = data.avatar || '';
-            if (avatar !== myAvatar) {
-                myAvatar = avatar;
-                avatarPreview.src = avatar || '';
-            }
-            updateOnline(myAvatar, playerName);
-        });
+const firebaseConfig = { databaseURL: "https://mygame-b11bf-default-rtdb.firebaseio.com/" };
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-        updateOnline(myAvatar, playerName);
-        setInterval(() => updateOnline(myAvatar, playerName), 15000);
+// ---------- СОСТОЯНИЕ ----------
+let playerName = localStorage.getItem('clickerProNick') || '';
+if (!playerName) {
+  playerName = prompt('Введи ник:') || 'Кликер_' + Math.floor(Math.random()*1000);
+  localStorage.setItem('clickerProNick', playerName);
+}
 
-        // ========== ЛОББИ И ВЫЗОВЫ ==========
-        async function refreshOnline() {
-            const listEl = document.getElementById('online-list');
-            listEl.innerHTML = 'Загрузка...';
-            const snap = await get(ref(db, 'online'));
-            const data = snap.val() || {};
-            const now = Date.now();
-            const players = Object.entries(data).filter(([name, info]) => {
-                if (info.timestamp && now - info.timestamp > 45000) {
-                    remove(ref(db, 'online/' + name));
-                    return false;
-                }
-                return name !== playerName;
-            });
-            if (players.length === 0) {
-                listEl.innerHTML = 'Никого нет в сети';
-                return;
-            }
-            listEl.innerHTML = players.map(([name, info]) => {
-                const avatarImg = info.avatar
-                    ? `<img src="${info.avatar}" class="player-avatar" alt="avatar">`
-                    : '<div class="player-avatar" style="display:flex;align-items:center;justify-content:center;font-size:20px;">👤</div>';
-                return `
-                <div class="online-item">
-                    <div class="player-info" onclick="viewProfile('${escapeHTML(name)}')">
-                        ${avatarImg}
-                        <span>${escapeHTML(name)}</span>
-                    </div>
-                    <div style="display:flex; gap:5px;">
-                        <button class="btn-gold btn-small" onclick="challenge('${escapeHTML(name)}')">⚔️</button>
-                        <button class="btn-purple btn-small" onclick="viewProfile('${escapeHTML(name)}')">👤</button>
-                    </div>
-                </div>`;
-            }).join('');
-        }
+let state = {
+  coins: 0,
+  totalClicks: 0,
+  perClick: 1,
+  activeSkins: ['default'],
+  currentSkin: 'default',
+  boostUntil: 0,
+  autoClickUntil: 0,
+  lastLogin: null
+};
 
-        window.viewProfile = async function(targetName) {
-            const snap = await get(ref(db, 'users/' + targetName));
-            const data = snap.val() || {};
-            const onlineSnap = await get(ref(db, 'online/' + targetName));
-            const onlineData = onlineSnap.val() || {};
+// ---------- СКИНЫ ----------
+const SKINS = {
+  default: { name:'Обычный', bg:'#ff9f43', shadow:'#d35400' },
+  green: { name:'Зелёный', bg:'#2ecc71', shadow:'#1e8449' },
+  blue: { name:'Синий', bg:'#3498db', shadow:'#1f618d' },
+  purple: { name:'Фиолетовый', bg:'#9b59b6', shadow:'#6c3483' },
+  gold: { name:'Золотой', bg:'#f1c40f', shadow:'#b8860b' }
+};
 
-            document.getElementById('player-profile-title').textContent = `👤 ${targetName}`;
-            document.getElementById('player-avatar-large').src = data.avatar || '';
-            document.getElementById('player-wins').textContent = data.duelsWon || 0;
-            document.getElementById('player-losses').textContent = data.duelsLost || 0;
-            document.getElementById('player-rating').textContent = data.rating || 0;
+// ---------- ЭЛЕМЕНТЫ ----------
+const coinDisplay = document.getElementById('coinDisplay');
+const clickBtn = document.getElementById('clickBtn');
+const totalClicksEl = document.getElementById('totalClicks');
+const perClickEl = document.getElementById('perClick');
+const boostsDiv = document.getElementById('boosts');
+const lastLoginEl = document.getElementById('lastLogin');
 
-            let lastSeenText = 'сейчас';
-            if (onlineData.timestamp) {
-                const diff = Date.now() - onlineData.timestamp;
-                const minutes = Math.floor(diff / 60000);
-                if (minutes < 1) lastSeenText = 'только что';
-                else if (minutes < 60) lastSeenText = `${minutes} мин. назад`;
-                else lastSeenText = 'давно';
-            } else {
-                lastSeenText = 'неизвестно';
-            }
-            document.getElementById('player-last-seen').textContent = lastSeenText;
+// ---------- FIREBASE ----------
+const userRef = ref(db, 'clickerpro/' + playerName);
+onValue(userRef, async (snap) => {
+  const data = snap.val();
+  if (!data) {
+    // Новый игрок
+    const nowString = new Date().toLocaleString();
+    await set(userRef, {
+      coins: 0,
+      totalClicks: 0,
+      perClick: 1,
+      activeSkins: ['default'],
+      currentSkin: 'default',
+      boostUntil: 0,
+      autoClickUntil: 0,
+      lastLogin: nowString
+    });
+    return;
+  }
 
-            switchScreen('player-profile');
-        };
+  // Обновляем lastLogin на читаемую дату
+  const nowString = new Date().toLocaleString();
+  const updates = { lastLogin: nowString };
 
-        window.challenge = async function(target) {
-            // Проверяем, нет ли у цели уже активного входящего вызова
-            const existingSnap = await get(ref(db, 'challenges/' + target));
-            if (existingSnap.exists()) {
-                showToast('Игрок уже занят другим вызовом');
-                return;
-            }
-            set(ref(db, 'challenges/' + target), {
-                from: playerName,
-                timestamp: serverTimestamp()
-            });
-            showToast('Вызов отправлен!');
-        };
+  // Удаляем лишнее поле prestige, если оно есть
+  if (data.prestige !== undefined) {
+    updates.prestige = null; // удалит поле из базы
+  }
 
-        // Обработка входящих вызовов
-        const myChallengeRef = ref(db, 'challenges/' + playerName);
-        onValue(myChallengeRef, (snap) => {
-            const data = snap.val();
-            const challengeAlert = document.getElementById('challenge-alert');
-            const challengerNameEl = document.getElementById('challenger-name');
-            const challengeCountdownEl = document.getElementById('challenge-countdown');
+  await update(userRef, updates);
 
-            if (data && data.from) {
-                hasIncomingChallenge = true;
-                challengerNameEl.textContent = data.from;
-                challengeAlert.style.display = 'block';
-                let timeLeft = 15;
-                challengeCountdownEl.textContent = timeLeft;
-                clearInterval(challengeTimer);
-                challengeTimer = setInterval(() => {
-                    timeLeft--;
-                    challengeCountdownEl.textContent = timeLeft;
-                    if (timeLeft <= 0) {
-                        clearInterval(challengeTimer);
-                        declineChallenge();
-                    }
-                }, 1000);
-            } else {
-                hasIncomingChallenge = false;
-                challengeAlert.style.display = 'none';
-                clearInterval(challengeTimer);
-            }
-        });
+  // Обновляем локальное состояние
+  state = {
+    coins: data.coins || 0,
+    totalClicks: data.totalClicks || 0,
+    perClick: data.perClick || 1,
+    activeSkins: data.activeSkins || ['default'],
+    currentSkin: data.currentSkin || 'default',
+    boostUntil: data.boostUntil || 0,
+    autoClickUntil: data.autoClickUntil || 0,
+    lastLogin: nowString
+  };
 
-        window.acceptChallenge = function() {
-            if (!hasIncomingChallenge) return;
-            clearInterval(challengeTimer);
-            const opponent = document.getElementById('challenger-name').textContent;
-            const duelRef = push(ref(db, 'activeDuels'));
-            const duelId = duelRef.key;
-            set(duelRef, {
-                players: [opponent, playerName],
-                state: 'countdown',
-                startTime: serverTimestamp(),
-                shots: {},
-                winner: null,
-                processed: false,
-                duelId: duelId
-            });
-            remove(myChallengeRef);
-            hasIncomingChallenge = false;
-            document.getElementById('challenge-alert').style.display = 'none';
-        };
+  renderUI();
+});
 
-        window.declineChallenge = function() {
-            clearInterval(challengeTimer);
-            remove(myChallengeRef);
-            document.getElementById('challenge-alert').style.display = 'none';
-            hasIncomingChallenge = false;
-        };
+function save() {
+  update(userRef, {
+    coins: state.coins,
+    totalClicks: state.totalClicks,
+    perClick: state.perClick,
+    activeSkins: state.activeSkins,
+    currentSkin: state.currentSkin,
+    boostUntil: state.boostUntil,
+    autoClickUntil: state.autoClickUntil
+  });
+}
 
-        // ========== ГЛОБАЛЬНЫЙ СЛУШАТЕЛЬ АКТИВНЫХ ДУЭЛЕЙ ==========
-        onValue(ref(db, 'activeDuels'), (snap) => {
-            const data = snap.val() || {};
-            for (const [duelId, duel] of Object.entries(data)) {
-                if (duel.players && duel.players.includes(playerName) && !currentDuelId) {
-                    currentDuelId = duelId;
-                    setupDuelListener(duelId, duel);
-                    switchScreen('duel');
-                    break;
-                }
-            }
-        });
+// ---------- КЛИК (МУЛЬТИТАЧ) ----------
+function handleClick(e) {
+  let mult = 1;
+  if (Date.now() < state.boostUntil) mult = 2;
+  
+  if (e.touches) {
+    for (let i = 0; i < e.touches.length; i++) {
+      state.coins += state.perClick * mult;
+      state.totalClicks += 1;
+    }
+  } else {
+    state.coins += state.perClick * mult;
+    state.totalClicks += 1;
+  }
+  
+  // Достижения
+  if (state.totalClicks >= 100 && !state.activeSkins.includes('green')) {
+    state.activeSkins.push('green');
+    alert('🎉 Скин "Зелёный" разблокирован!');
+  }
+  if (state.totalClicks >= 500 && !state.activeSkins.includes('blue')) {
+    state.activeSkins.push('blue');
+    alert('🎉 Скин "Синий" разблокирован!');
+  }
+  if (state.totalClicks >= 2000 && !state.activeSkins.includes('purple')) {
+    state.activeSkins.push('purple');
+    alert('🎉 Скин "Фиолетовый" разблокирован!');
+  }
+  if (state.totalClicks >= 10000 && !state.activeSkins.includes('gold')) {
+    state.activeSkins.push('gold');
+    alert('🎉 Скин "Золотой" разблокирован!');
+  }
+  
+  save();
+  renderUI();
+}
 
-        // ========== ДУЭЛЬ ==========
-        function setupDuelListener(duelId, initialData) {
-            const countdownEl = document.getElementById('countdown');
-            const statusEl = document.getElementById('duel-status');
-            const revolverBtn = document.getElementById('revolver');
+clickBtn.addEventListener('mousedown', handleClick);
+clickBtn.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  handleClick(e);
+}, { passive: false });
 
-            shotSent = false;
-            revolverBtn.style.display = 'none';
-            countdownEl.textContent = '';
-            statusEl.textContent = '';
-            clearTimeout(shootTimer);
+// ---------- МАГАЗИН ----------
+document.getElementById('buyClickUp').onclick = () => {
+  if (state.coins >= 10) { state.coins -= 10; state.perClick += 1; save(); }
+  else alert('Недостаточно монет!');
+};
+document.getElementById('buyX2Boost').onclick = () => {
+  if (state.coins >= 50) { state.coins -= 50; state.boostUntil = Date.now() + 5*60*1000; save(); }
+  else alert('Недостаточно монет!');
+};
+document.getElementById('buyAutoClick').onclick = () => {
+  if (state.coins >= 200) { state.coins -= 200; state.autoClickUntil = Date.now() + 10*1000; save(); }
+  else alert('Недостаточно монет!');
+};
 
-            const duelRef = ref(db, 'activeDuels/' + duelId);
+// ---------- АВТОКЛИК ----------
+setInterval(() => {
+  if (Date.now() < state.autoClickUntil) {
+    state.coins += state.perClick;
+    state.totalClicks += 1;
+    save();
+    renderUI();
+  }
+}, 1000);
 
-            onValue(duelRef, (snap) => {
-                const data = snap.val();
-                if (!data) {
-                    currentDuelId = null;
-                    switchScreen('home');
-                    return;
-                }
+// ---------- МИНИ-ИГРА (ОРЁЛ И РЕШКА) ----------
+document.getElementById('btnHeads').onclick = () => playCoin('heads');
+document.getElementById('btnTails').onclick = () => playCoin('tails');
 
-                if (data.state === 'countdown') {
-                    startCountdown(duelRef);
-                } else if (data.state === 'shoot') {
-                    if (!shotSent) {
-                        revolverBtn.style.display = 'flex';
-                    }
-                    countdownEl.textContent = '';
-                    statusEl.textContent = '';
+function playCoin(choice) {
+  const stake = 10;
+  if (state.coins < stake) {
+    document.getElementById('coinResult').textContent = 'Недостаточно монет!';
+    return;
+  }
+  const side = Math.random() < 0.5 ? 'heads' : 'tails';
+  const win = choice === side;
+  if (win) {
+    state.coins += stake;
+    document.getElementById('coinResult').textContent = `Выпал ${side === 'heads' ? 'Орёл' : 'Решка'}! Ты выиграл +${stake}`;
+  } else {
+    state.coins -= stake;
+    document.getElementById('coinResult').textContent = `Выпал ${side === 'heads' ? 'Орёл' : 'Решка'}! Ты проиграл -${stake}`;
+  }
+  save();
+  renderUI();
+}
 
-                    // Запускаем таймер автозавершения на 5 секунд
-                    clearTimeout(shootTimer);
-                    shootTimer = setTimeout(() => {
-                        if (currentDuelId === duelId && data.state === 'shoot') {
-                            // Автоматическое завершение: кто не выстрелил - проиграл
-                            autoFinishDuel(duelId, data);
-                        }
-                    }, 5000);
-                } else if (data.state === 'finished') {
-                    clearTimeout(shootTimer);
-                    processResult(data, duelId);
-                }
-            });
+// ---------- СКИНЫ ----------
+function renderSkins() {
+  const grid = document.getElementById('skinGrid');
+  grid.innerHTML = Object.entries(SKINS).map(([id, s]) => {
+    const owned = state.activeSkins.includes(id);
+    return `<div class="skin-item ${state.currentSkin===id?'active':''} ${!owned?'locked':''}" 
+      onclick="${owned ? `applySkin('${id}')` : ''}">
+      <div class="skin-preview" style="background:${s.bg}"></div>
+      ${s.name} ${!owned?'🔒':''}
+    </div>`;
+  }).join('');
+}
 
-            // Отдельный слушатель выстрелов для определения победителя
-            const shotsRef = ref(db, `activeDuels/${duelId}/shots`);
-            onValue(shotsRef, (shotsSnap) => {
-                const shots = shotsSnap.val() || {};
-                const entries = Object.entries(shots);
-                if (entries.length === 2 && !initialData.processed) {
-                    // Оба выстрелили - определяем победителя
-                    const [p1, t1] = entries[0];
-                    const [p2, t2] = entries[1];
-                    const winner = t1.timestamp < t2.timestamp ? p1 : p2;
-                    update(duelRef, { state: 'finished', winner: winner, processed: true });
-                }
-            });
-        }
+window.applySkin = (id) => {
+  state.currentSkin = id;
+  const skin = SKINS[id];
+  clickBtn.style.background = skin.bg;
+  clickBtn.style.boxShadow = `0 10px 0 ${skin.shadow}, 0 20px 25px rgba(0,0,0,0.5)`;
+  save();
+  renderSkins();
+};
 
-        function startCountdown(duelRef) {
-            let count = 3;
-            const countdownEl = document.getElementById('countdown');
-            countdownEl.textContent = count;
-            document.getElementById('revolver').style.display = 'none';
-            document.getElementById('duel-status').textContent = '';
-            clearInterval(countdownTimer);
-            countdownTimer = setInterval(() => {
-                count--;
-                if (count <= 0) {
-                    clearInterval(countdownTimer);
-                    countdownEl.textContent = 'СТРЕЛЯЙ!';
-                    document.getElementById('revolver').style.display = 'flex';
-                    update(duelRef, { state: 'shoot' });
-                } else {
-                    countdownEl.textContent = count;
-                }
-            }, 1000);
-        }
+// ---------- ПРОФИЛЬ ----------
+document.getElementById('saveNick').onclick = () => {
+  const newNick = document.getElementById('nickInput').value.trim();
+  if (newNick && newNick !== playerName) {
+    get(ref(db, 'clickerpro/' + newNick)).then(snap => {
+      if (snap.exists()) { alert('Ник занят!'); return; }
+      const oldData = { ...state };
+      set(ref(db, 'clickerpro/' + newNick), oldData);
+      remove(ref(db, 'clickerpro/' + playerName));
+      playerName = newNick;
+      localStorage.setItem('clickerProNick', playerName);
+      location.reload();
+    });
+  }
+};
 
-        window.shoot = function() {
-            if (!currentDuelId || shotSent) return;
-            shotSent = true;
-            set(ref(db, `activeDuels/${currentDuelId}/shots/${playerName}`), { timestamp: Date.now() });
-            document.getElementById('revolver').style.display = 'none';
-            document.getElementById('duel-status').textContent = 'Выстрел сделан!';
-        };
+document.getElementById('resetBtn').onclick = () => {
+  if (confirm('Точно сбросить весь прогресс?')) {
+    set(userRef, {
+      coins: 0,
+      totalClicks: 0,
+      perClick: 1,
+      activeSkins: ['default'],
+      currentSkin: 'default',
+      boostUntil: 0,
+      autoClickUntil: 0,
+      lastLogin: new Date().toLocaleString()
+    });
+  }
+};
 
-        function autoFinishDuel(duelId, data) {
-            const shots = data.shots || {};
-            const entries = Object.entries(shots);
-            let winner = null;
-            if (entries.length === 1) {
-                winner = entries[0][0]; // кто выстрелил, тот победил
-            } else if (entries.length === 0) {
-                winner = null; // ничья
-            }
-            update(ref(db, `activeDuels/${duelId}`), { state: 'finished', winner: winner, processed: true });
-        }
+// Удаление неактивных игроков (не заходивших >30 дней)
+document.getElementById('deleteInactiveBtn').onclick = async () => {
+  if (!confirm('Удалить всех игроков, которые не заходили больше 30 дней?')) return;
+  const snapshot = await get(ref(db, 'clickerpro'));
+  const users = snapshot.val() || {};
+  const now = Date.now();
+  const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+  for (const [name, data] of Object.entries(users)) {
+    // lastLogin теперь строка, нужно парсить
+    const loginTime = data.lastLogin ? new Date(data.lastLogin).getTime() : 0;
+    if (loginTime && (now - loginTime) > thirtyDays) {
+      await remove(ref(db, 'clickerpro/' + name));
+    }
+  }
+  alert('Старые записи удалены!');
+};
 
-        function processResult(data, duelId) {
-            clearInterval(countdownTimer);
-            clearTimeout(shootTimer);
-            const winner = data.winner;
-            let resultText;
-            if (winner === playerName) {
-                resultText = '🏆 Ты победил!';
-            } else if (winner && winner !== playerName) {
-                resultText = '😞 Ты проиграл...';
-            } else {
-                resultText = '🤝 Ничья';
-            }
-            document.getElementById('duel-status').textContent = resultText;
-            document.getElementById('revolver').style.display = 'none';
-            document.getElementById('countdown').textContent = '';
+// ---------- РЕНДЕР ----------
+function renderUI() {
+  coinDisplay.textContent = state.coins.toLocaleString() + ' 💰';
+  totalClicksEl.textContent = state.totalClicks.toLocaleString();
+  perClickEl.textContent = state.perClick + ' за клик';
+  
+  if (state.lastLogin) {
+    lastLoginEl.textContent = state.lastLogin;
+  }
+  
+  let boostText = '';
+  if (Date.now() < state.boostUntil) boostText += '⚡ x2 активен | ';
+  if (Date.now() < state.autoClickUntil) boostText += '🤖 Автоклик активен';
+  boostsDiv.innerHTML = boostText || '';
+  
+  renderSkins();
+}
 
-            const userRef = ref(db, 'users/' + playerName);
-            if (!processedDuels.has(duelId)) {
-                processedDuels.add(duelId);
-                if (winner === playerName) {
-                    update(userRef, { duelsWon: increment(1), rating: increment(10) });
-                } else if (winner && winner !== playerName) {
-                    update(userRef, { duelsLost: increment(1), rating: increment(-5) });
-                }
-                push(ref(db, 'duelHistory'), {
-                    player1: data.players[0],
-                    player2: data.players[1],
-                    winner: winner || 'draw',
-                    timestamp: serverTimestamp()
-                });
-            }
+// НАВИГАЦИЯ
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(btn.dataset.screen).classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
 
-            setTimeout(() => {
-                remove(ref(db, 'activeDuels/' + duelId));
-                if (currentDuelId === duelId) currentDuelId = null;
-                switchScreen('home');
-            }, 3000);
-        }
+renderUI();
+</script>
+</body>
+</html> <!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>🚀 Кликер Профи – Чистая версия</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f0f1a; font-family: 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+      min-height: 100vh; color: white; padding: 20px;
+    }
+    .screen { display: none; width: 100%; max-width: 400px; }
+    .screen.active { display: block; }
 
-        window.leaveDuel = function() {
-            if (currentDuelId) {
-                // Засчитываем поражение вышедшему
-                set(ref(db, `activeDuels/${currentDuelId}/shots/${playerName}`), { timestamp: Date.now() + 10000 });
-                update(ref(db, `activeDuels/${currentDuelId}`), { state: 'finished', winner: null, processed: true });
-                remove(ref(db, 'activeDuels/' + currentDuelId));
-                currentDuelId = null;
-            }
-            clearInterval(countdownTimer);
-            clearTimeout(shootTimer);
-            switchScreen('home');
-        };
+    .btn {
+      background: #2a2a4a; color: white; border: none; border-radius: 16px;
+      padding: 14px 24px; font-size: 18px; cursor: pointer; width: 100%; margin: 6px 0;
+      transition: all 0.2s; font-weight: bold;
+    }
+    .btn:active { transform: scale(0.96); background: #3a3a6a; }
+    .btn-accent { background: #6c5ce7; }
+    .btn-gold { background: #f39c12; color: #111; }
 
-        // ========== ЛИДЕРЫ ==========
-        function loadLeaders(sortBy = 'rating') {
-            get(ref(db, 'users')).then(snap => {
-                const users = snap.val() || {};
-                const list = Object.entries(users).map(([name, data]) => ({
-                    name,
-                    ...data
-                }));
-                if (sortBy === 'wins') {
-                    list.sort((a,b) => (b.duelsWon||0) - (a.duelsWon||0));
-                } else if (sortBy === 'losses') {
-                    list.sort((a,b) => (b.duelsLost||0) - (a.duelsLost||0));
-                } else {
-                    list.sort((a,b) => (b.rating||0) - (a.rating||0));
-                }
-                const listEl = document.getElementById('leaders-list');
-                listEl.innerHTML = list.slice(0, 20).map(user => {
-                    const avatarImg = user.avatar
-                        ? `<img src="${user.avatar}" class="leader-avatar" alt="avatar">`
-                        : '<div class="leader-avatar" style="display:flex;align-items:center;justify-content:center;font-size:20px;">👤</div>';
-                    return `
-                    <div class="leader-entry">
-                        ${avatarImg}
-                        <span style="flex:1">${escapeHTML(user.name)}</span>
-                        <span>🏆 ${user.rating || 0} | ⚔️ ${user.duelsWon || 0} | 💔 ${user.duelsLost || 0}</span>
-                    </div>`;
-                }).join('');
-            });
-        }
+    .card {
+      background: #1a1a2e; border-radius: 24px; padding: 20px; margin: 16px 0;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
 
-        // Переключение вкладок лидеров
-        document.querySelectorAll('.leaders-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.leaders-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                loadLeaders(tab.dataset.leader);
-            });
-        });
+    .clicker {
+      background: #ff9f43; border-radius: 50%;
+      width: 180px; height: 180px; display: flex; align-items: center;
+      justify-content: center; font-size: 40px; margin: 20px auto;
+      box-shadow: 0 10px 0 #d35400, 0 20px 25px rgba(0,0,0,0.5);
+      cursor: pointer; user-select: none; transition: 0.1s;
+      touch-action: manipulation;
+    }
+    .clicker:active { transform: scale(0.92); box-shadow: 0 4px 0 #d35400; }
 
-        // ========== ПРОФИЛЬ ==========
-        window.changeNickname = async function() {
-            const newName = prompt("Новый ник:", playerName);
-            if (!newName || newName === playerName) return;
-            const snap = await get(ref(db, 'users/' + newName));
-            if (snap.exists()) {
-                showToast('Этот ник уже занят!');
-                return;
-            }
-            if (currentDuelId) {
-                showToast('Нельзя менять ник во время дуэли');
-                return;
-            }
-            const oldData = (await get(ref(db, 'users/' + playerName))).val() || {};
-            await set(ref(db, 'users/' + newName), oldData);
-            await remove(ref(db, 'users/' + playerName));
-            await remove(ref(db, 'online/' + playerName));
-            await remove(ref(db, 'challenges/' + playerName));
+    .stats { display: flex; justify-content: center; }
+    .stat { background: #2a2a4a; border-radius: 16px; padding: 14px; margin: 4px; text-align: center; }
 
-            playerName = newName;
-            localStorage.setItem('duelName', playerName);
-            showToast('Ник изменён!');
-        };
+    .nav {
+      display: flex; justify-content: space-around; background: #12121f;
+      padding: 10px; border-radius: 24px; margin-top: 20px;
+    }
+    .nav-btn { background: none; border: none; color: #aaa; font-size: 16px; cursor: pointer; }
+    .nav-btn.active { color: #ff9f43; font-weight: bold; }
 
-        document.getElementById('avatar-file').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async (ev) => {
-                const img = new Image();
-                img.onload = async () => {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    const size = 128;
-                    canvas.width = canvas.height = size;
-                    ctx.drawImage(img, 0, 0, size, size);
-                    const compressed = canvas.toDataURL('image/jpeg', 0.7);
-                    await update(ref(db, 'users/' + playerName), { avatar: compressed });
-                    showToast('Аватар обновлён!');
-                };
-                img.src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
+    .skin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .skin-item { background: #2a2a4a; border-radius: 20px; padding: 14px; text-align: center; cursor: pointer; }
+    .skin-item.active { border: 2px solid #ff9f43; }
+    .skin-preview { width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 8px; background: #ff9f43; }
 
-        // История дуэлей
-        onValue(ref(db, 'duelHistory'), (snap) => {
-            const data = snap.val() || {};
-            const entries = Object.values(data).sort((a,b) => b.timestamp - a.timestamp).slice(0, 10);
-            const list = document.getElementById('history-list');
-            if (entries.length === 0) {
-                list.innerHTML = 'Пока пусто';
-                return;
-            }
-            list.innerHTML = entries.map(e => `
-                <div style="background:#2c3e50;border-radius:10px;padding:8px;margin:5px 0;">
-                    ${escapeHTML(e.player1)} vs ${escapeHTML(e.player2)} — победитель: ${e.winner === 'draw' ? 'ничья' : escapeHTML(e.winner)}
-                </div>
-            `).join('');
-        });
+    .coin-game { display: flex; gap: 10px; justify-content: center; }
+    .coin-btn {
+      background: #2a2a4a; border: none; border-radius: 16px; padding: 20px;
+      font-size: 28px; cursor: pointer; color: white;
+    }
+  </style>
+</head>
+<body>
 
-        // ========== НАВИГАЦИЯ ==========
-        function switchScreen(screen) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screen + '-screen').classList.add('active');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            const btn = document.querySelector(`.nav-btn[data-screen="${screen}"]`);
-            if (btn) btn.classList.add('active');
-            if (screen === 'lobby') refreshOnline();
-            if (screen === 'leaders') loadLeaders();
-        }
+<div id="app">
+  <!-- ГЛАВНАЯ -->
+  <div id="home" class="screen active">
+    <div class="card" style="text-align:center;">
+      <h1 id="coinDisplay">0 💰</h1>
+      <p id="perClick">1 за клик</p>
+    </div>
+    <div class="clicker" id="clickBtn">🔥</div>
+    <div class="stats">
+      <div class="stat">Всего кликов<br><b id="totalClicks">0</b></div>
+    </div>
+    <div id="boosts"></div>
+  </div>
 
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', () => switchScreen(btn.dataset.screen));
-        });
+  <!-- МАГАЗИН -->
+  <div id="shop" class="screen">
+    <h2>🛒 Магазин</h2>
+    <button class="btn btn-accent" id="buyClickUp">➕ Клик +1 (10 монет)</button>
+    <button class="btn btn-gold" id="buyX2Boost">⚡ x2 Буст (5 мин) - 50</button>
+    <button class="btn" id="buyAutoClick">🤖 Автоклик (10 сек) - 200</button>
+  </div>
 
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.textContent = msg; t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 2500);
-        }
+  <!-- МИНИ-ИГРЫ -->
+  <div id="games" class="screen">
+    <h2>🎮 Мини-игры</h2>
+    <div class="card">
+      <h3>🪙 Орёл и решка</h3>
+      <p>Ставка: 10 монет</p>
+      <div class="coin-game">
+        <button class="coin-btn" id="btnHeads">🦅 Орёл</button>
+        <button class="coin-btn" id="btnTails">💰 Решка</button>
+      </div>
+      <p id="coinResult"></p>
+    </div>
+  </div>
 
-        function escapeHTML(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]); }
+  <!-- СКИНЫ -->
+  <div id="skins" class="screen">
+    <h2>🎨 Скины</h2>
+    <div class="skin-grid" id="skinGrid"></div>
+  </div>
 
-        // При закрытии вкладки/отключении
-        window.addEventListener('beforeunload', () => {
-            remove(ref(db, 'online/' + playerName));
-        });
-    </script>
+  <!-- ПРОФИЛЬ -->
+  <div id="profile" class="screen">
+    <h2>👤 Профиль</h2>
+    <input type="text" id="nickInput" placeholder="Введи ник" style="width:100%; padding:14px; border-radius:16px; border:none; margin:10px 0;">
+    <button class="btn btn-accent" id="saveNick">Сохранить</button>
+    <div class="card">
+      <p>Последний вход: <span id="lastLogin">-</span></p>
+    </div>
+    <button class="btn" id="resetBtn">🔄 Сбросить прогресс</button>
+    <button class="btn" id="deleteInactiveBtn">🧹 Удалить неактивных (>30 дней)</button>
+  </div>
+
+  <!-- НАВИГАЦИЯ -->
+  <div class="nav">
+    <button class="nav-btn active" data-screen="home">🏠</button>
+    <button class="nav-btn" data-screen="shop">🛒</button>
+    <button class="nav-btn" data-screen="games">🎮</button>
+    <button class="nav-btn" data-screen="skins">🎨</button>
+    <button class="nav-btn" data-screen="profile">👤</button>
+  </div>
+</div>
+
+<script type="importmap">
+  { "imports": { "firebase/app": "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js", "firebase/database": "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js" } }
+</script>
+<script type="module">
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, set, onValue, update, get, remove } from "firebase/database";
+
+const firebaseConfig = { databaseURL: "https://mygame-b11bf-default-rtdb.firebaseio.com/" };
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ---------- СОСТОЯНИЕ ----------
+let playerName = localStorage.getItem('clickerProNick') || '';
+if (!playerName) {
+  playerName = prompt('Введи ник:') || 'Кликер_' + Math.floor(Math.random()*1000);
+  localStorage.setItem('clickerProNick', playerName);
+}
+
+let state = {
+  coins: 0,
+  totalClicks: 0,
+  perClick: 1,
+  activeSkins: ['default'],
+  currentSkin: 'default',
+  boostUntil: 0,
+  autoClickUntil: 0,
+  lastLogin: null
+};
+
+// ---------- СКИНЫ ----------
+const SKINS = {
+  default: { name:'Обычный', bg:'#ff9f43', shadow:'#d35400' },
+  green: { name:'Зелёный', bg:'#2ecc71', shadow:'#1e8449' },
+  blue: { name:'Синий', bg:'#3498db', shadow:'#1f618d' },
+  purple: { name:'Фиолетовый', bg:'#9b59b6', shadow:'#6c3483' },
+  gold: { name:'Золотой', bg:'#f1c40f', shadow:'#b8860b' }
+};
+
+// ---------- ЭЛЕМЕНТЫ ----------
+const coinDisplay = document.getElementById('coinDisplay');
+const clickBtn = document.getElementById('clickBtn');
+const totalClicksEl = document.getElementById('totalClicks');
+const perClickEl = document.getElementById('perClick');
+const boostsDiv = document.getElementById('boosts');
+const lastLoginEl = document.getElementById('lastLogin');
+
+// ---------- FIREBASE ----------
+const userRef = ref(db, 'clickerpro/' + playerName);
+onValue(userRef, async (snap) => {
+  const data = snap.val();
+  if (!data) {
+    // Новый игрок
+    const nowString = new Date().toLocaleString();
+    await set(userRef, {
+      coins: 0,
+      totalClicks: 0,
+      perClick: 1,
+      activeSkins: ['default'],
+      currentSkin: 'default',
+      boostUntil: 0,
+      autoClickUntil: 0,
+      lastLogin: nowString
+    });
+    return;
+  }
+
+  // Обновляем lastLogin на читаемую дату
+  const nowString = new Date().toLocaleString();
+  const updates = { lastLogin: nowString };
+
+  // Удаляем лишнее поле prestige, если оно есть
+  if (data.prestige !== undefined) {
+    updates.prestige = null; // удалит поле из базы
+  }
+
+  await update(userRef, updates);
+
+  // Обновляем локальное состояние
+  state = {
+    coins: data.coins || 0,
+    totalClicks: data.totalClicks || 0,
+    perClick: data.perClick || 1,
+    activeSkins: data.activeSkins || ['default'],
+    currentSkin: data.currentSkin || 'default',
+    boostUntil: data.boostUntil || 0,
+    autoClickUntil: data.autoClickUntil || 0,
+    lastLogin: nowString
+  };
+
+  renderUI();
+});
+
+function save() {
+  update(userRef, {
+    coins: state.coins,
+    totalClicks: state.totalClicks,
+    perClick: state.perClick,
+    activeSkins: state.activeSkins,
+    currentSkin: state.currentSkin,
+    boostUntil: state.boostUntil,
+    autoClickUntil: state.autoClickUntil
+  });
+}
+
+// ---------- КЛИК (МУЛЬТИТАЧ) ----------
+function handleClick(e) {
+  let mult = 1;
+  if (Date.now() < state.boostUntil) mult = 2;
+  
+  if (e.touches) {
+    for (let i = 0; i < e.touches.length; i++) {
+      state.coins += state.perClick * mult;
+      state.totalClicks += 1;
+    }
+  } else {
+    state.coins += state.perClick * mult;
+    state.totalClicks += 1;
+  }
+  
+  // Достижения
+  if (state.totalClicks >= 100 && !state.activeSkins.includes('green')) {
+    state.activeSkins.push('green');
+    alert('🎉 Скин "Зелёный" разблокирован!');
+  }
+  if (state.totalClicks >= 500 && !state.activeSkins.includes('blue')) {
+    state.activeSkins.push('blue');
+    alert('🎉 Скин "Синий" разблокирован!');
+  }
+  if (state.totalClicks >= 2000 && !state.activeSkins.includes('purple')) {
+    state.activeSkins.push('purple');
+    alert('🎉 Скин "Фиолетовый" разблокирован!');
+  }
+  if (state.totalClicks >= 10000 && !state.activeSkins.includes('gold')) {
+    state.activeSkins.push('gold');
+    alert('🎉 Скин "Золотой" разблокирован!');
+  }
+  
+  save();
+  renderUI();
+}
+
+clickBtn.addEventListener('mousedown', handleClick);
+clickBtn.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  handleClick(e);
+}, { passive: false });
+
+// ---------- МАГАЗИН ----------
+document.getElementById('buyClickUp').onclick = () => {
+  if (state.coins >= 10) { state.coins -= 10; state.perClick += 1; save(); }
+  else alert('Недостаточно монет!');
+};
+document.getElementById('buyX2Boost').onclick = () => {
+  if (state.coins >= 50) { state.coins -= 50; state.boostUntil = Date.now() + 5*60*1000; save(); }
+  else alert('Недостаточно монет!');
+};
+document.getElementById('buyAutoClick').onclick = () => {
+  if (state.coins >= 200) { state.coins -= 200; state.autoClickUntil = Date.now() + 10*1000; save(); }
+  else alert('Недостаточно монет!');
+};
+
+// ---------- АВТОКЛИК ----------
+setInterval(() => {
+  if (Date.now() < state.autoClickUntil) {
+    state.coins += state.perClick;
+    state.totalClicks += 1;
+    save();
+    renderUI();
+  }
+}, 1000);
+
+// ---------- МИНИ-ИГРА (ОРЁЛ И РЕШКА) ----------
+document.getElementById('btnHeads').onclick = () => playCoin('heads');
+document.getElementById('btnTails').onclick = () => playCoin('tails');
+
+function playCoin(choice) {
+  const stake = 10;
+  if (state.coins < stake) {
+    document.getElementById('coinResult').textContent = 'Недостаточно монет!';
+    return;
+  }
+  const side = Math.random() < 0.5 ? 'heads' : 'tails';
+  const win = choice === side;
+  if (win) {
+    state.coins += stake;
+    document.getElementById('coinResult').textContent = `Выпал ${side === 'heads' ? 'Орёл' : 'Решка'}! Ты выиграл +${stake}`;
+  } else {
+    state.coins -= stake;
+    document.getElementById('coinResult').textContent = `Выпал ${side === 'heads' ? 'Орёл' : 'Решка'}! Ты проиграл -${stake}`;
+  }
+  save();
+  renderUI();
+}
+
+// ---------- СКИНЫ ----------
+function renderSkins() {
+  const grid = document.getElementById('skinGrid');
+  grid.innerHTML = Object.entries(SKINS).map(([id, s]) => {
+    const owned = state.activeSkins.includes(id);
+    return `<div class="skin-item ${state.currentSkin===id?'active':''} ${!owned?'locked':''}" 
+      onclick="${owned ? `applySkin('${id}')` : ''}">
+      <div class="skin-preview" style="background:${s.bg}"></div>
+      ${s.name} ${!owned?'🔒':''}
+    </div>`;
+  }).join('');
+}
+
+window.applySkin = (id) => {
+  state.currentSkin = id;
+  const skin = SKINS[id];
+  clickBtn.style.background = skin.bg;
+  clickBtn.style.boxShadow = `0 10px 0 ${skin.shadow}, 0 20px 25px rgba(0,0,0,0.5)`;
+  save();
+  renderSkins();
+};
+
+// ---------- ПРОФИЛЬ ----------
+document.getElementById('saveNick').onclick = () => {
+  const newNick = document.getElementById('nickInput').value.trim();
+  if (newNick && newNick !== playerName) {
+    get(ref(db, 'clickerpro/' + newNick)).then(snap => {
+      if (snap.exists()) { alert('Ник занят!'); return; }
+      const oldData = { ...state };
+      set(ref(db, 'clickerpro/' + newNick), oldData);
+      remove(ref(db, 'clickerpro/' + playerName));
+      playerName = newNick;
+      localStorage.setItem('clickerProNick', playerName);
+      location.reload();
+    });
+  }
+};
+
+document.getElementById('resetBtn').onclick = () => {
+  if (confirm('Точно сбросить весь прогресс?')) {
+    set(userRef, {
+      coins: 0,
+      totalClicks: 0,
+      perClick: 1,
+      activeSkins: ['default'],
+      currentSkin: 'default',
+      boostUntil: 0,
+      autoClickUntil: 0,
+      lastLogin: new Date().toLocaleString()
+    });
+  }
+};
+
+// Удаление неактивных игроков (не заходивших >30 дней)
+document.getElementById('deleteInactiveBtn').onclick = async () => {
+  if (!confirm('Удалить всех игроков, которые не заходили больше 30 дней?')) return;
+  const snapshot = await get(ref(db, 'clickerpro'));
+  const users = snapshot.val() || {};
+  const now = Date.now();
+  const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+  for (const [name, data] of Object.entries(users)) {
+    // lastLogin теперь строка, нужно парсить
+    const loginTime = data.lastLogin ? new Date(data.lastLogin).getTime() : 0;
+    if (loginTime && (now - loginTime) > thirtyDays) {
+      await remove(ref(db, 'clickerpro/' + name));
+    }
+  }
+  alert('Старые записи удалены!');
+};
+
+// ---------- РЕНДЕР ----------
+function renderUI() {
+  coinDisplay.textContent = state.coins.toLocaleString() + ' 💰';
+  totalClicksEl.textContent = state.totalClicks.toLocaleString();
+  perClickEl.textContent = state.perClick + ' за клик';
+  
+  if (state.lastLogin) {
+    lastLoginEl.textContent = state.lastLogin;
+  }
+  
+  let boostText = '';
+  if (Date.now() < state.boostUntil) boostText += '⚡ x2 активен | ';
+  if (Date.now() < state.autoClickUntil) boostText += '🤖 Автоклик активен';
+  boostsDiv.innerHTML = boostText || '';
+  
+  renderSkins();
+}
+
+// НАВИГАЦИЯ
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(btn.dataset.screen).classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+renderUI();
+</script>
 </body>
 </html>
