@@ -1,159 +1,30 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Часы</title>
-<style>
-body {
-  background: #1a1008;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-  font-family: Arial;
-}
-#clock {
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #fff8dc, #f5e6b8 40%, #d4b168 80%, #a68a3e);
-  border: 15px solid #5a3a1a;
-  box-shadow: 0 0 0 5px #d4af37, 0 20px 40px rgba(0,0,0,0.7);
-  position: relative;
-}
-.hand {
-  position: absolute;
-  bottom: 50%;
-  left: 50%;
-  background: #1a0d00;
-  border-radius: 5px;
-  transform-origin: bottom center;
-}
-#h { width: 12px; height: 80px; margin-left: -6px; }
-#m { width: 8px; height: 110px; margin-left: -4px; }
-#s { width: 3px; height: 130px; margin-left: -1.5px; background: #e63946; }
-#center {
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 22px; height: 22px;
-  background: radial-gradient(circle at 35% 30%, #f5d76e, #b8860b 50%, #5a3a1a);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  border: 2px solid #3a2008;
-}
-/* Цифры */
-.digit {
-  position: absolute;
-  font-weight: 900;
-  font-size: 26px;
-  color: #3a2008;
-  transform: translate(-50%, -50%);
-  font-family: Georgia, serif;
-}
-/* Метки */
-.mark {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform-origin: center bottom;
-  background: #4a2f10;
-}
-.mark.min { width: 2px; height: 8px; margin-left: -1px; }
-.mark.hr { width: 5px; height: 16px; margin-left: -2.5px; border-radius: 2px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backrooms Wiki</title>
+    <style>
+        /* Убираем отступы, чтобы вики была на весь экран */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        /* Настраиваем окно вики */
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+    </style>
 </head>
 <body>
 
-<div id="clock">
-  <div class="hand" id="h"></div>
-  <div class="hand" id="m"></div>
-  <div class="hand" id="s"></div>
-  <div id="center"></div>
-</div>
+    <!-- Загружаем твой файл wiki.html -->
+    <iframe src="wiki.html" title="Backrooms Wiki"></iframe>
 
-<script>
-// Построить метки и цифры
-var clock = document.getElementById('clock');
-var size = 300;
-var cx = size / 2;
-
-for (var i = 0; i < 60; i++) {
-  var isHr = i % 5 === 0;
-  var m = document.createElement('div');
-  m.className = 'mark ' + (isHr ? 'hr' : 'min');
-  m.style.transform = 'translate(-50%, -100%) rotate(' + (i * 6) + 'deg) translateY(-' + (cx - 18) + 'px)';
-  clock.appendChild(m);
-}
-
-var digits = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-for (var d = 0; d < 12; d++) {
-  var a = (d * 30 - 90) * Math.PI / 180;
-  var r = size * 0.36;
-  var el = document.createElement('div');
-  el.className = 'digit';
-  el.style.left = (50 + Math.cos(a) * r * 100 / size) + '%';
-  el.style.top = (50 + Math.sin(a) * r * 100 / size) + '%';
-  el.textContent = digits[d];
-  clock.appendChild(el);
-}
-
-// Звук
-var soundOn = false;
-var audioCtx = null;
-var tickIndex = 0;
-var lastSec = -1;
-
-// Включаем звук при первом тапе
-document.body.addEventListener('touchstart', activateSound, { once: true });
-document.body.addEventListener('mousedown', activateSound, { once: true });
-
-function activateSound() {
-  try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    audioCtx.resume();
-    soundOn = true;
-  } catch(e) {}
-}
-
-function playTick(freq) {
-  if (!soundOn || !audioCtx) return;
-  var osc = audioCtx.createOscillator();
-  var gain = audioCtx.createGain();
-  osc.type = 'triangle';
-  osc.frequency.value = freq;
-  gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.15, audioCtx.currentTime + 0.003);
-  gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.06);
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.07);
-}
-
-// Часы
-setInterval(function() {
-  var d = new Date();
-  var utc = d.getTime() + d.getTimezoneOffset() * 60000;
-  var msk = new Date(utc + 3 * 3600000);
-  
-  var hh = msk.getHours();
-  var mm = msk.getMinutes();
-  var ss = msk.getSeconds();
-  
-  document.getElementById('h').style.transform = 'rotate(' + ((hh % 12) * 30 + mm * 0.5) + 'deg)';
-  document.getElementById('m').style.transform = 'rotate(' + (mm * 6 + ss * 0.1) + 'deg)';
-  document.getElementById('s').style.transform = 'rotate(' + (ss * 6) + 'deg)';
-  
-  if (ss !== lastSec) {
-    lastSec = ss;
-    if (tickIndex % 2 === 0) playTick(1400);
-    else playTick(1100);
-    tickIndex++;
-  }
-  
-  document.title = hh + ':' + (mm < 10 ? '0' + mm : mm) + ':' + (ss < 10 ? '0' + ss : ss);
-}, 100);
-</script>
 </body>
 </html>
